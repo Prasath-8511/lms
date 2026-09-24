@@ -1,0 +1,104 @@
+<section class="utility-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">{{ content.eyebrow }}</span>
+      <h1>{{ content.title }}</h1>
+      <p>{{ content.description }}</p>
+    </div>
+    <span class="utility-heading-icon"><app-icon [name]="content.icon" [size]="23" /></span>
+  </div>
+  @if (isSettings) {
+    <div class="settings-layout">
+      <section class="settings-card card">
+        <div class="settings-card-heading">
+          <span class="settings-icon"><app-icon name="settings" [size]="19" /></span>
+          <div>
+            <h2>Workspace preferences</h2>
+            <p>Personalize how LearnSphere works for you.</p>
+          </div>
+        </div>
+        <label class="setting-row"
+          ><span
+            ><strong>Email learning reminders</strong
+            ><small>Receive a gentle nudge when your weekly goal is waiting.</small></span
+          ><input type="checkbox" checked /><i class="toggle"></i></label
+        ><label class="setting-row"
+          ><span
+            ><strong>Community suggestions</strong
+            ><small>See courses and events recommended by your learning community.</small></span
+          ><input type="checkbox" checked /><i class="toggle"></i></label
+        ><label class="setting-row"
+          ><span
+            ><strong>Weekly progress summary</strong
+            ><small>Receive a summary of your learning activity every Monday.</small></span
+          ><input type="checkbox" /><i class="toggle"></i
+        ></label>
+      </section>
+      <section class="api-card card">
+        <div class="settings-card-heading">
+          <span class="settings-icon settings-icon--green"
+            ><app-icon name="lock" [size]="19"
+          /></span>
+          <div>
+            <h2>API connection</h2>
+            <p>Use a session-only key while the backend contract is being finalized.</p>
+          </div>
+        </div>
+        <div class="api-status">
+          <span class="status-dot" [class.status-dot--live]="store.dataSource() === 'api'"></span
+          ><strong>{{
+            store.dataSource() === 'mock' ? 'Demo data is active' : 'Live API is active'
+          }}</strong>
+        </div>
+        <label class="field-label" for="api-key">Temporary API key</label>
+        <div class="api-input">
+          <app-icon name="lock" [size]="15" /><input
+            id="api-key"
+            type="password"
+            placeholder="Paste the key provided by backend"
+            [ngModel]="apiKey()"
+            (ngModelChange)="apiKey.set($event)"
+          /><button
+            class="button button--primary button--small"
+            type="button"
+            (click)="saveApiKey()"
+          >
+            Save session key
+          </button>
+        </div>
+        <p class="api-help">
+          For a real deployment, configure <code>apiKey</code> in the environment file only for
+          local development, or use a secure backend proxy. See <strong>API_INTEGRATION.md</strong>.
+        </p>
+        @if (keySaved()) {
+          <div class="saved-message">
+            <app-icon name="check" [size]="14" /> Session key saved for this browser tab.
+          </div>
+        }
+      </section>
+    </div>
+  } @else {
+    <div class="utility-grid">
+      @for (card of content.cards; track card.title) {
+        <article class="utility-card card">
+          <span class="utility-card-icon"><app-icon [name]="card.icon" [size]="20" /></span>
+          <h2>{{ card.title }}</h2>
+          <p>{{ card.description }}</p>
+          <button class="text-link" type="button">
+            {{ card.action }} <app-icon name="arrow-right" [size]="14" />
+          </button>
+        </article>
+      }
+    </div>
+    <section class="contact-card card">
+      <span class="contact-icon"><app-icon name="megaphone" [size]="20" /></span>
+      <div>
+        <h2>Still need a hand?</h2>
+        <p>Our learning support team is here to help you find the right answer.</p>
+      </div>
+      <button class="button button--secondary" type="button">
+        Contact support <app-icon name="arrow-right" [size]="14" />
+      </button>
+    </section>
+  }
+</section>

@@ -1,0 +1,113 @@
+<section class="login-page">
+  <div class="login-visual">
+    <div class="visual-brand">
+      <span class="brand-mark">LS</span
+      ><span><strong>LearnSphere</strong><small>Enterprise Learning</small></span>
+    </div>
+    <div class="visual-copy">
+      <span class="eyebrow">One platform. Every possibility.</span>
+      <h1>Make learning<br /><em>matter.</em></h1>
+      <p>Give people the skills, space, and support to do their best work.</p>
+    </div>
+    <div class="visual-quote">
+      <span class="quote-mark">“</span>
+      <p>Learning is not a destination. It is a way of moving forward.</p>
+      <small>— LearnSphere learning philosophy</small>
+    </div>
+    <div class="visual-orbit orbit-one"></div>
+    <div class="visual-orbit orbit-two"></div>
+    <div class="visual-glow"></div>
+  </div>
+  <main class="login-panel">
+    <div class="login-panel-inner">
+      <a class="mobile-brand" routerLink="/login"
+        ><span class="brand-mark">LS</span><strong>LearnSphere</strong></a
+      >
+      <div class="login-heading">
+        <span class="eyebrow">Welcome back</span>
+        <h2>Sign in to your workspace</h2>
+        <p>Choose a demo role below or use your organization account.</p>
+      </div>
+      <div class="demo-role-grid">
+        @for (account of demoAccounts; track account.role) {
+          <button
+            type="button"
+            class="demo-role"
+            [class.demo-role--selected]="selectedRole() === account.role"
+            (click)="selectDemo(account)"
+          >
+            <span class="demo-avatar" [class]="'demo-avatar--' + account.tone">{{
+              account.initials
+            }}</span
+            ><span
+              ><strong>{{ account.label }}</strong
+              ><small>{{ account.description }}</small></span
+            ><span class="demo-check"><app-icon name="check" [size]="12" /></span>
+          </button>
+        }
+      </div>
+      <div class="login-divider"><span>or use credentials</span></div>
+      <form class="login-form" (submit)="$event.preventDefault(); submit()">
+        <label class="form-field"
+          ><span>Email address</span
+          ><span class="input-wrap"
+            ><app-icon name="users" [size]="16" /><input
+              type="email"
+              name="email"
+              autocomplete="username"
+              placeholder="you@company.com"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              required /></span></label
+        ><label class="form-field"
+          ><span>Password</span
+          ><span class="input-wrap"
+            ><app-icon name="lock" [size]="16" /><input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              required /><button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              (click)="showPassword.set(!showPassword())"
+            >
+              <app-icon [name]="showPassword() ? 'close' : 'users'" [size]="15" /></button></span
+        ></label>
+        <div class="form-options">
+          <label class="remember"
+            ><input
+              type="checkbox"
+              [checked]="rememberMe()"
+              (change)="rememberMe.set($any($event.target).checked)"
+            /><span>Keep me signed in</span></label
+          ><a href="#" (click)="$event.preventDefault()">Forgot password?</a>
+        </div>
+        @if (errorMessage()) {
+          <div class="login-error"><app-icon name="help" [size]="15" />{{ errorMessage() }}</div>
+        }
+        <button
+          class="button button--primary login-submit"
+          type="submit"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Signing you in…' : 'Sign in' }}
+          <app-icon name="arrow-right" [size]="15" />
+        </button>
+      </form>
+      <p class="register-link">
+        New to LearnSphere? <a routerLink="/register">Create an account</a>
+      </p>
+      <p class="demo-hint">
+        <app-icon name="sparkles" [size]="14" /> All demo accounts use password
+        <strong>demo123</strong>
+      </p>
+      <p class="login-footer">
+        Need access? <a href="#" (click)="$event.preventDefault()">Contact your administrator</a>
+      </p>
+    </div>
+  </main>
+</section>

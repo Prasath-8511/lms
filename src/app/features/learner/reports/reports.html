@@ -1,0 +1,119 @@
+<section class="reports-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Learning analytics</span>
+      <h1>Reports</h1>
+      <p>Understand your momentum and make your next learning decision with confidence.</p>
+    </div>
+    <div class="report-actions">
+      <div class="period-select">
+        <app-icon name="calendar" [size]="15" /><select
+          aria-label="Report period"
+          [value]="period()"
+          (change)="period.set($any($event.target).value)"
+        >
+          @for (item of periods; track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      </div>
+      <button class="button button--primary" type="button">
+        <app-icon name="download" [size]="15" /> Export report
+      </button>
+    </div>
+  </div>
+  <div class="report-kpis">
+    <article class="report-kpi card">
+      <span class="kpi-label">Learning hours</span
+      ><strong>{{ store.stats().learningHours }}h</strong
+      ><span class="kpi-change"><app-icon name="trend" [size]="13" /> 18% vs last month</span>
+      <div class="sparkline sparkline--blue">
+        @for (bar of bars; track $index) {
+          <i [style.height.%]="bar"></i>
+        }
+      </div>
+    </article>
+    <article class="report-kpi card">
+      <span class="kpi-label">Completion rate</span><strong>{{ completionRate() }}%</strong
+      ><span class="kpi-change"><app-icon name="trend" [size]="13" /> 6% vs last month</span>
+      <div class="sparkline sparkline--green">
+        @for (bar of bars; track $index) {
+          <i [style.height.%]="bar - 8"></i>
+        }
+      </div>
+    </article>
+    <article class="report-kpi card">
+      <span class="kpi-label">Assessments passed</span><strong>8<span>/10</span></strong
+      ><span class="kpi-change"><app-icon name="trend" [size]="13" /> 2 more passed</span>
+      <div class="sparkline sparkline--violet">
+        @for (bar of bars; track $index) {
+          <i [style.height.%]="bar - 18"></i>
+        }
+      </div>
+    </article>
+  </div>
+  <div class="report-grid">
+    <section class="activity-chart card">
+      <div class="section-heading">
+        <div>
+          <h2>Learning activity</h2>
+          <p>Minutes spent learning over the last 12 weeks.</p>
+        </div>
+        <span class="chart-legend"><i></i> Learning time</span>
+      </div>
+      <div class="chart-area">
+        <div class="chart-y">
+          <span>120</span><span>90</span><span>60</span><span>30</span><span>0</span>
+        </div>
+        <div class="chart-bars">
+          @for (bar of bars; track $index) {
+            <div class="chart-column">
+              <i [style.height.%]="bar"></i
+              ><span>{{
+                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'][$index]
+              }}</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="chart-footer">
+        <span>Average weekly time <strong>3h 12m</strong></span
+        ><span>Goal <strong>6h</strong></span>
+      </div>
+    </section>
+    <section class="skills-card card">
+      <div class="section-heading">
+        <div>
+          <h2>Skill focus</h2>
+          <p>Where your time is going.</p>
+        </div>
+        <app-icon name="target" [size]="18" />
+      </div>
+      <div class="donut-wrap">
+        <div class="donut">
+          <span><strong>42h</strong><small>total</small></span>
+        </div>
+        <div class="donut-legend">
+          <span><i class="legend-blue"></i>Development <b>42%</b></span
+          ><span><i class="legend-cyan"></i>Testing <b>26%</b></span
+          ><span><i class="legend-violet"></i>Automation <b>18%</b></span
+          ><span><i class="legend-gray"></i>Other <b>14%</b></span>
+        </div>
+      </div>
+    </section>
+  </div>
+  <section class="insights-card card">
+    <div class="insight-icon"><app-icon name="sparkles" [size]="20" /></div>
+    <div>
+      <span class="eyebrow">A useful insight</span>
+      <h2>Your consistency is paying off.</h2>
+      <p>
+        You have studied on 6 of the last 7 days. Learners with a 5+ day streak are 2.4 times more
+        likely to complete their current course.
+      </p>
+    </div>
+    <button class="button button--secondary button--small" type="button">
+      View recommendations <app-icon name="arrow-right" [size]="13" />
+    </button>
+  </section>
+</section>

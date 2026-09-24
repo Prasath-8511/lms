@@ -1,0 +1,104 @@
+<section class="courses-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Course catalog</span>
+      <h1>Find your next skill</h1>
+      <p>Explore practical courses designed to help you build confidence and momentum.</p>
+    </div>
+    <a class="button button--primary" routerLink="/my-learning"
+      ><app-icon name="play" [size]="15" /> My learning</a
+    >
+  </div>
+  <div class="catalog-toolbar card">
+    <div class="catalog-search">
+      <app-icon name="search" [size]="18" /><input
+        type="search"
+        placeholder="Search the catalog"
+        aria-label="Search the catalog"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+    <div class="toolbar-meta">
+      <span>{{ filteredCourses().length }} courses</span
+      ><button class="filter-button" type="button">
+        <app-icon name="filter" [size]="16" /> Filters
+      </button>
+    </div>
+  </div>
+  <div class="category-tabs" role="tablist" aria-label="Course categories">
+    @for (category of categories; track category) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="selectedCategory() === category"
+        [class.category-tab--active]="selectedCategory() === category"
+        class="category-tab"
+        (click)="setCategory(category)"
+      >
+        {{ category }}
+      </button>
+    }
+  </div>
+  <div class="catalog-grid">
+    @for (course of filteredCourses(); track course.id) {
+      <article class="catalog-card card">
+        <a
+          class="catalog-visual"
+          [class]="'catalog-visual--' + course.color"
+          [routerLink]="['/courses', course.id]"
+          ><span class="visual-pattern"></span
+          ><span class="catalog-icon"><app-icon [name]="course.icon" [size]="27" /></span
+          ><span class="catalog-bookmark"><app-icon name="book" [size]="15" /></span
+        ></a>
+        <div class="catalog-body">
+          <div class="course-meta">
+            <span>{{ course.category }}</span
+            ><span class="meta-dot">•</span><span>{{ course.level }}</span>
+          </div>
+          <h2>
+            <a [routerLink]="['/courses', course.id]">{{ course.title }}</a>
+          </h2>
+          <p>{{ course.description }}</p>
+          <div class="catalog-details">
+            <span><app-icon name="clock" [size]="14" /> {{ course.duration }}</span
+            ><span><app-icon name="book" [size]="14" /> {{ course.lessons }} lessons</span
+            ><span><app-icon name="award" [size]="14" /> {{ course.rating }}</span>
+          </div>
+          <div class="catalog-footer">
+            @if (course.enrolled) {
+              <span class="status-pill status-pill--green">Enrolled</span
+              ><a
+                class="button button--secondary button--small"
+                [routerLink]="['/courses', course.id]"
+                >Continue <app-icon name="arrow-right" [size]="13"
+              /></a>
+            } @else {
+              <span class="status-pill status-pill--gray">Not enrolled</span
+              ><button
+                class="button button--primary button--small"
+                type="button"
+                (click)="store.enroll(course.id)"
+              >
+                Enroll <app-icon name="plus" [size]="13" />
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <div class="catalog-empty card">
+        <span class="empty-icon"><app-icon name="search" [size]="24" /></span>
+        <h2>No courses found</h2>
+        <p>Try another search term or browse all categories.</p>
+        <button
+          class="button button--secondary button--small"
+          type="button"
+          (click)="searchTerm.set(''); setCategory('All courses')"
+        >
+          Clear filters
+        </button>
+      </div>
+    }
+  </div>
+</section>

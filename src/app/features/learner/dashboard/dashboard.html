@@ -1,0 +1,158 @@
+<section class="dashboard-page">
+  <div class="dashboard-hero">
+    <div>
+      <span class="eyebrow">Your learning space</span>
+      <h1>{{ greeting() }}, {{ firstName() }} <span class="wave">👋</span></h1>
+      <p>Continue building your skills and stay on track with your learning goals.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="button button--secondary" routerLink="/my-learning">View learning</a
+      ><a class="button button--primary" routerLink="/courses"
+        >Browse courses <app-icon name="arrow-right" [size]="15"
+      /></a>
+    </div>
+  </div>
+
+  @if (store.isLoading()) {
+    <div class="loading-banner"><span class="spinner"></span> Syncing your learning data…</div>
+  }
+
+  <div class="stats-grid">
+    <article class="stat-card card">
+      <span class="stat-icon stat-icon--blue"><app-icon name="book" [size]="20" /></span>
+      <div>
+        <span class="stat-label">Courses enrolled</span
+        ><strong>{{ stats().coursesEnrolled }}</strong
+        ><small>{{ stats().enrolledChange }}</small>
+      </div>
+    </article>
+    <article class="stat-card card">
+      <span class="stat-icon stat-icon--cyan"><app-icon name="target" [size]="20" /></span>
+      <div>
+        <span class="stat-label">Courses completed</span
+        ><strong>{{ stats().coursesCompleted }}</strong
+        ><small>{{ stats().completedChange }}</small>
+      </div>
+    </article>
+    <article class="stat-card card">
+      <span class="stat-icon stat-icon--violet"><app-icon name="award" [size]="20" /></span>
+      <div>
+        <span class="stat-label">Certifications earned</span
+        ><strong>{{ stats().certificationsEarned }}</strong
+        ><small>{{ stats().certificationChange }}</small>
+      </div>
+    </article>
+    <article class="stat-card card">
+      <span class="stat-icon stat-icon--orange"><app-icon name="clock" [size]="20" /></span>
+      <div>
+        <span class="stat-label">Learning hours</span
+        ><strong>{{ stats().learningHours }}<em>h</em></strong
+        ><small>{{ stats().hoursChange }}</small>
+      </div>
+    </article>
+  </div>
+
+  <div class="section-heading continue-heading">
+    <div>
+      <h2>Continue learning</h2>
+      <p>Pick up where you left off.</p>
+    </div>
+    <a class="text-link" routerLink="/my-learning"
+      >View all <app-icon name="arrow-right" [size]="14"
+    /></a>
+  </div>
+  <div class="course-row">
+    @for (course of continueCourses(); track course.id) {
+      <article class="course-card card">
+        <a
+          class="course-visual"
+          [class]="'course-visual--' + course.color"
+          [routerLink]="['/courses', course.id]"
+        >
+          <span class="visual-pattern"></span
+          ><span class="course-icon"><app-icon [name]="course.icon" [size]="30" /></span
+          ><span class="bookmark"><app-icon name="book" [size]="16" /></span>
+        </a>
+        <div class="course-card-body">
+          <div class="course-meta">
+            <span>{{ course.category }}</span
+            ><span class="meta-dot">•</span><span>{{ course.level }}</span>
+          </div>
+          <h3>
+            <a [routerLink]="['/courses', course.id]">{{ course.title }}</a>
+          </h3>
+          <p>{{ course.description }}</p>
+          <div class="course-progress">
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="course.progress"></div>
+            </div>
+            <span>{{ course.progress }}%</span>
+          </div>
+          <div class="course-card-footer">
+            <span><app-icon name="clock" [size]="14" /> {{ course.duration }}</span
+            ><a class="button button--primary button--small" [routerLink]="['/courses', course.id]"
+              >Resume <app-icon name="arrow-right" [size]="13"
+            /></a>
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-state card">
+        <app-icon name="sparkles" [size]="24" /><strong>Your next course is waiting</strong>
+        <p>Explore the catalog and start building a new skill.</p>
+        <a class="button button--primary button--small" routerLink="/courses">Browse courses</a>
+      </div>
+    }
+  </div>
+
+  <div class="dashboard-lower">
+    <section class="activity-panel card">
+      <div class="section-heading">
+        <div>
+          <h2>Recent activity</h2>
+          <p>Your latest learning moments.</p>
+        </div>
+        <a class="text-link" routerLink="/reports">View report</a>
+      </div>
+      <div class="activity-list">
+        @for (item of store.activity(); track item.id) {
+          <div class="activity-item">
+            <span class="activity-icon" [class]="'activity-icon--' + item.tone"
+              ><app-icon [name]="item.icon" [size]="16" /></span
+            ><span class="activity-copy"
+              ><strong>{{ item.title }}</strong
+              ><small>{{ item.detail }}</small></span
+            ><time>{{ item.time }}</time>
+          </div>
+        }
+      </div>
+    </section>
+    <section class="upcoming-panel card">
+      <div class="section-heading">
+        <div>
+          <h2>Up next</h2>
+          <p>Keep your momentum going.</p>
+        </div>
+        <span class="calendar-icon"><app-icon name="calendar" [size]="18" /></span>
+      </div>
+      @if (nextAssessment(); as assessment) {
+        <div class="upcoming-assessment">
+          <span class="assessment-type">{{ assessment.type }} · {{ assessment.course }}</span>
+          <h3>{{ assessment.title }}</h3>
+          <div class="assessment-meta">
+            <span><app-icon name="clock" [size]="14" /> {{ assessment.duration }}</span
+            ><span><app-icon name="calendar" [size]="14" /> {{ assessment.dueDate }}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="assessment.progress"></div>
+          </div>
+          <a class="button button--primary button--small" routerLink="/assessments"
+            >Open assessment <app-icon name="arrow-right" [size]="13"
+          /></a>
+        </div>
+      } @else {
+        <div class="empty-inline">You are all caught up.</div>
+      }
+    </section>
+  </div>
+</section>

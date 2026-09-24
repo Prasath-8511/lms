@@ -1,0 +1,144 @@
+<section class="assessments-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Measure your growth</span>
+      <h1>Assessments</h1>
+      <p>Test your understanding, get useful feedback, and turn practice into mastery.</p>
+    </div>
+    <span class="assessment-count"
+      ><strong>{{ activeCount() }}</strong
+      ><span>active assessments</span></span
+    >
+  </div>
+  <div class="assessment-summary">
+    <article class="summary-card card">
+      <span class="summary-icon summary-icon--blue"><app-icon name="clipboard" [size]="19" /></span>
+      <div>
+        <span>Assigned to you</span><strong>{{ assessments().length }}</strong>
+      </div>
+    </article>
+    <article class="summary-card card">
+      <span class="summary-icon summary-icon--green"><app-icon name="check" [size]="19" /></span>
+      <div>
+        <span>Completed</span><strong>{{ completedCount() }}</strong>
+      </div>
+    </article>
+    <article class="summary-card card">
+      <span class="summary-icon summary-icon--orange"><app-icon name="target" [size]="19" /></span>
+      <div><span>Average score</span><strong>94%</strong></div>
+    </article>
+  </div>
+  <div class="assessment-list card">
+    <div class="list-header">
+      <div>
+        <h2>Your assessments</h2>
+        <p>Keep an eye on upcoming work and recent results.</p>
+      </div>
+      <button class="filter-button" type="button">
+        <app-icon name="filter" [size]="16" /> Sort by due date
+      </button>
+    </div>
+    <div class="assessment-table">
+      <div class="table-row table-row--head">
+        <span>Assessment</span><span>Type</span><span>Due date</span><span>Progress</span
+        ><span>Status</span><span></span>
+      </div>
+      @for (assessment of assessments(); track assessment.id) {
+        <div class="table-row">
+          <div class="assessment-name">
+            <span
+              class="assessment-symbol"
+              [class]="'assessment-symbol assessment-symbol--' + assessment.type.toLowerCase()"
+              ><app-icon
+                [name]="
+                  assessment.type === 'Quiz'
+                    ? 'clipboard'
+                    : assessment.type === 'Project'
+                      ? 'target'
+                      : 'book'
+                "
+                [size]="17" /></span
+            ><span
+              ><strong>{{ assessment.title }}</strong
+              ><small>{{ assessment.course }}</small></span
+            >
+          </div>
+          <span class="type-label">{{ assessment.type }} · {{ assessment.questions }} items</span
+          ><span class="due-label">{{ assessment.dueDate }}</span>
+          <div class="table-progress">
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="assessment.progress"></div>
+            </div>
+            <span>{{ assessment.progress }}%</span>
+          </div>
+          <span
+            class="status-pill"
+            [class.status-pill--green]="assessment.status === 'Completed'"
+            [class.status-pill--blue]="assessment.status === 'In progress'"
+            [class.status-pill--orange]="assessment.status === 'Due soon'"
+            [class.status-pill--gray]="assessment.status === 'Not started'"
+            >{{ assessment.status }}</span
+          ><button
+            class="button button--secondary button--small"
+            type="button"
+            (click)="openAssessment(assessment)"
+          >
+            {{
+              assessment.status === 'Completed'
+                ? 'Review'
+                : assessment.status === 'In progress'
+                  ? 'Continue'
+                  : 'Start'
+            }}
+            <app-icon name="arrow-right" [size]="13" />
+          </button>
+        </div>
+      } @empty {
+        <div class="empty-row">No assessments have been assigned yet.</div>
+      }
+    </div>
+  </div>
+  @if (selectedAssessment(); as assessment) {
+    <div class="modal-backdrop" (click)="closeAssessment()">
+      <section
+        class="assessment-modal card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assessment-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-top">
+          <span class="assessment-symbol assessment-symbol--quiz"
+            ><app-icon name="clipboard" [size]="19" /></span
+          ><button
+            class="icon-button"
+            type="button"
+            aria-label="Close assessment"
+            (click)="closeAssessment()"
+          >
+            <app-icon name="close" [size]="18" />
+          </button>
+        </div>
+        <span class="eyebrow">{{ assessment.type }} · {{ assessment.course }}</span>
+        <h2 id="assessment-title">{{ assessment.title }}</h2>
+        <p class="modal-copy">
+          You have {{ assessment.questions }} questions and {{ assessment.duration }} to complete
+          this assessment. Your progress is saved automatically.
+        </p>
+        <div class="modal-meta">
+          <span><app-icon name="clock" [size]="15" /> {{ assessment.duration }}</span
+          ><span><app-icon name="calendar" [size]="15" /> {{ assessment.dueDate }}</span
+          ><span><app-icon name="target" [size]="15" /> {{ assessment.questions }} questions</span>
+        </div>
+        <div class="modal-actions">
+          <button class="button button--secondary" type="button" (click)="closeAssessment()">
+            Not now</button
+          ><button class="button button--primary" type="button" (click)="closeAssessment()">
+            {{ assessment.status === 'Completed' ? 'Review answers' : 'Begin assessment' }}
+            <app-icon name="arrow-right" [size]="14" />
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

@@ -1,0 +1,77 @@
+<section class="feature-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">{{ config().eyebrow }}</span>
+      <h1>{{ config().title }}</h1>
+      <p>{{ config().description }}</p>
+    </div>
+    <div class="feature-actions">
+      @if (config().secondaryAction) {
+        @if (config().secondaryRoute) {
+          <a class="button button--secondary" [routerLink]="config().secondaryRoute!">{{
+            config().secondaryAction
+          }}</a>
+        } @else {
+          <button class="button button--secondary" type="button">
+            {{ config().secondaryAction }}
+          </button>
+        }
+      }
+      @if (config().primaryRoute) {
+        <a class="button button--primary" [routerLink]="config().primaryRoute"
+          >{{ config().primaryAction }} <app-icon name="arrow-right" [size]="14"
+        /></a>
+      } @else {
+        <button class="button button--primary" type="button">
+          {{ config().primaryAction }} <app-icon name="plus" [size]="14" />
+        </button>
+      }
+    </div>
+  </div>
+  <div class="feature-stats">
+    @for (stat of config().stats; track stat.label) {
+      <article class="feature-stat card">
+        <span class="feature-stat-icon" [class]="'feature-stat-icon--' + stat.tone"
+          ><app-icon name="sparkles" [size]="18"
+        /></span>
+        <div>
+          <span>{{ stat.label }}</span
+          ><strong>{{ stat.value }}</strong
+          ><small>{{ stat.change }}</small>
+        </div>
+      </article>
+    }
+  </div>
+  <section class="feature-list card">
+    <div class="section-heading">
+      <div>
+        <h2>Workspace items</h2>
+        <p>Current records available to this feature.</p>
+      </div>
+      <span class="list-count">{{ config().items.length }} records</span>
+    </div>
+    <div class="feature-table">
+      <div class="feature-table-head">
+        <span>Name</span><span>Type</span><span>Detail</span><span>Status</span><span>Action</span>
+      </div>
+      @for (item of config().items; track item.title) {
+        <div class="feature-table-row">
+          <div class="feature-item-name">
+            <span class="feature-item-icon"><app-icon [name]="config().icon" [size]="16" /></span
+            ><strong>{{ item.title }}</strong>
+          </div>
+          <span>{{ item.subtitle }}</span
+          ><span>{{ item.meta }}</span
+          ><app-status-pill [label]="item.status" [tone]="item.statusTone" /><button
+            class="button button--secondary button--small"
+            type="button"
+          >
+            {{ item.action }} <app-icon name="arrow-right" [size]="13" />
+          </button>
+        </div>
+      } @empty {
+        <div class="empty-row">No records are available yet.</div>
+      }
+    </div>
+  </section>
+</section>

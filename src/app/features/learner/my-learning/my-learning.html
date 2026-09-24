@@ -1,0 +1,113 @@
+<section class="learning-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Your progress</span>
+      <h1>My learning</h1>
+      <p>Stay consistent, celebrate progress, and keep your next milestone close.</p>
+    </div>
+    <a class="button button--primary" routerLink="/courses"
+      ><app-icon name="plus" [size]="15" /> Add a course</a
+    >
+  </div>
+  <div class="learning-summary">
+    <article class="learning-score card">
+      <div class="score-ring">
+        <strong>{{ averageProgress() }}%</strong><span>overall</span>
+      </div>
+      <div>
+        <span class="eyebrow">Learning journey</span>
+        <h2>You are building a strong habit</h2>
+        <p>Keep your weekly streak alive by spending a few minutes in your current course.</p>
+        <div class="streak">
+          <span class="streak-icon"><app-icon name="sparkles" [size]="16" /></span
+          ><strong>{{ store.profile().streak }} day streak</strong><span>Best: 14 days</span>
+        </div>
+      </div>
+    </article>
+    <article class="learning-goal card">
+      <div class="section-heading">
+        <div>
+          <h2>Weekly goal</h2>
+          <p>4h 20m of 6h completed</p>
+        </div>
+        <span class="goal-percent">72%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" [style.width.%]="72"></div></div>
+      <div class="goal-days">
+        <span class="goal-day goal-day--done"
+          >M<i><app-icon name="check" [size]="11" /></i></span
+        ><span class="goal-day goal-day--done"
+          >T<i><app-icon name="check" [size]="11" /></i></span
+        ><span class="goal-day goal-day--done"
+          >W<i><app-icon name="check" [size]="11" /></i></span
+        ><span class="goal-day goal-day--today">T<i></i></span><span class="goal-day">F<i></i></span
+        ><span class="goal-day">S<i></i></span><span class="goal-day">S<i></i></span>
+      </div>
+      <p class="goal-note"><app-icon name="trend" [size]="15" /> 18% more than last week</p>
+    </article>
+  </div>
+  <div class="learning-toolbar">
+    <div class="filter-tabs">
+      @for (filter of filters; track filter) {
+        <button
+          type="button"
+          [class.filter-tab--active]="activeFilter() === filter"
+          class="filter-tab"
+          (click)="activeFilter.set(filter)"
+        >
+          {{ filter }}
+          <span>{{
+            filter === 'All'
+              ? store.enrolledCourses().length
+              : filter === 'In progress'
+                ? store.inProgressCourses().length
+                : store.profile().completedCourses
+          }}</span>
+        </button>
+      }
+    </div>
+    <a class="text-link" routerLink="/reports"
+      >View full report <app-icon name="arrow-right" [size]="14"
+    /></a>
+  </div>
+  <div class="learning-list">
+    @for (course of visibleCourses(); track course.id) {
+      <article class="learning-row card">
+        <div class="learning-thumb" [class]="'learning-thumb--' + course.color">
+          <app-icon [name]="course.icon" [size]="25" />
+        </div>
+        <div class="learning-row-copy">
+          <span class="course-meta">{{ course.category }} · {{ course.level }}</span>
+          <h2>
+            <a [routerLink]="['/courses', course.id]">{{ course.title }}</a>
+          </h2>
+          <p>Next: {{ course.nextLesson }}</p>
+          <div class="learning-progress">
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="course.progress"></div>
+            </div>
+            <strong>{{ course.progress }}%</strong>
+          </div>
+        </div>
+        <div class="learning-row-side">
+          <span
+            class="status-pill"
+            [class.status-pill--green]="course.progress === 100"
+            [class.status-pill--blue]="course.progress > 0 && course.progress < 100"
+            >{{ course.progress === 100 ? 'Completed' : 'In progress' }}</span
+          ><a class="button button--secondary button--small" [routerLink]="['/courses', course.id]"
+            >{{ course.progress === 100 ? 'Review' : 'Continue' }}
+            <app-icon name="arrow-right" [size]="13"
+          /></a>
+        </div>
+      </article>
+    } @empty {
+      <div class="learning-empty card">
+        <span class="empty-icon"><app-icon name="play" [size]="24" /></span>
+        <h2>No courses in this view</h2>
+        <p>Choose another filter or explore the catalog.</p>
+        <a class="button button--primary button--small" routerLink="/courses">Browse courses</a>
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,93 @@
+<section class="announcements-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Stay in the loop</span>
+      <h1>Announcements</h1>
+      <p>Important updates, learning opportunities, and stories from the LearnSphere community.</p>
+    </div>
+    <span class="announcement-badge"
+      ><app-icon name="megaphone" [size]="16" /> {{ store.unreadAnnouncements() }} pinned</span
+    >
+  </div>
+  <div class="announcement-layout">
+    <div class="announcement-main">
+      <div class="filter-tabs">
+        @for (filter of filters; track filter) {
+          <button
+            type="button"
+            class="filter-tab"
+            [class.filter-tab--active]="activeFilter() === filter"
+            (click)="activeFilter.set(filter)"
+          >
+            {{ filter }}
+          </button>
+        }
+      </div>
+      <div class="announcement-list">
+        @for (item of filteredAnnouncements(); track item.id) {
+          <article class="announcement-item card" [class.announcement-item--pinned]="item.pinned">
+            <div class="announcement-item-top">
+              <span
+                class="category-tag"
+                [class]="'category-tag category-tag--' + item.category.toLowerCase()"
+                >{{ item.category }}</span
+              ><time>{{ item.date }}</time>
+            </div>
+            <h2>
+              {{ item.title }}
+              @if (item.pinned) {
+                <span class="pin"><app-icon name="sparkles" [size]="12" /></span>
+              }
+            </h2>
+            <p>{{ item.excerpt }}</p>
+            <div class="announcement-item-footer">
+              <span>By {{ item.author }}</span
+              ><button class="text-link" type="button">
+                Read update <app-icon name="arrow-right" [size]="14" />
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-announcements card">
+            <app-icon name="megaphone" [size]="24" /><strong>No updates in this category</strong>
+            <p>Check back soon for new announcements.</p>
+          </div>
+        }
+      </div>
+    </div>
+    <aside class="announcement-aside">
+      <section class="event-card card">
+        <div class="section-heading">
+          <div>
+            <h2>Coming up</h2>
+            <p>Dates for your calendar.</p>
+          </div>
+          <app-icon name="calendar" [size]="18" />
+        </div>
+        <div class="event-item">
+          <span class="event-date"><strong>28</strong><small>SEP</small></span
+          ><span><strong>Angular office hours</strong><small>Live · 10:00 AM</small></span>
+        </div>
+        <div class="event-item">
+          <span class="event-date event-date--purple"><strong>02</strong><small>OCT</small></span
+          ><span><strong>Learning challenge</strong><small>Submissions close</small></span>
+        </div>
+        <div class="event-item">
+          <span class="event-date event-date--green"><strong>15</strong><small>OCT</small></span
+          ><span><strong>Compliance deadline</strong><small>Mandatory course</small></span>
+        </div>
+      </section>
+      <section class="community-card card">
+        <span class="community-icon"><app-icon name="users" [size]="19" /></span>
+        <h2>Learn together</h2>
+        <p>
+          Join the community to share ideas, discover resources, and celebrate progress with other
+          learners.
+        </p>
+        <button class="button button--secondary button--small" type="button">
+          Explore community <app-icon name="arrow-right" [size]="13" />
+        </button>
+      </section>
+    </aside>
+  </div>
+</section>

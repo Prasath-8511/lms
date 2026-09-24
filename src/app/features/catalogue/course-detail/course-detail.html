@@ -1,0 +1,154 @@
+@if (course(); as selectedCourse) {
+  <section class="course-detail-page">
+    <a class="back-link" routerLink="/courses"
+      ><app-icon name="arrow-right" [size]="14" /> Back to courses</a
+    >
+    <div class="detail-hero card" [class]="'detail-hero detail-hero--' + selectedCourse.color">
+      <div class="detail-hero-copy">
+        <div class="detail-breadcrumb">
+          <span>{{ selectedCourse.category }}</span
+          ><i>•</i><span>{{ selectedCourse.level }}</span>
+        </div>
+        <h1>{{ selectedCourse.title }}</h1>
+        <p>{{ selectedCourse.description }}</p>
+        <div class="detail-instructor">
+          <span class="instructor-avatar">{{ selectedCourse.instructor.slice(0, 1) }}</span
+          ><span
+            >Created by <strong>{{ selectedCourse.instructor }}</strong></span
+          ><span class="rating"
+            ><app-icon name="award" [size]="14" /> {{ selectedCourse.rating }}</span
+          >
+        </div>
+      </div>
+      <div class="detail-hero-art">
+        <span class="hero-orbit hero-orbit--one"></span
+        ><span class="hero-orbit hero-orbit--two"></span
+        ><span class="hero-icon"><app-icon [name]="selectedCourse.icon" [size]="47" /></span>
+      </div>
+    </div>
+    <div class="detail-layout">
+      <main class="curriculum">
+        <div class="detail-section-heading">
+          <div>
+            <span class="eyebrow">Course curriculum</span>
+            <h2>What you will learn</h2>
+          </div>
+          <span class="lesson-count"
+            >{{ completedLessons() }} of {{ selectedCourse.lessons }} lessons complete</span
+          >
+        </div>
+        <div class="progress-track detail-progress">
+          <div class="progress-fill" [style.width.%]="selectedCourse.progress"></div>
+        </div>
+        <div class="progress-caption">
+          <span>{{ selectedCourse.progress }}% complete</span
+          ><span>{{ selectedCourse.duration }} total</span>
+        </div>
+        @for (module of modules(); track module.id; let moduleIndex = $index) {
+          <section class="module-card card">
+            <div class="module-heading">
+              <span class="module-number">0{{ moduleIndex + 1 }}</span>
+              <div>
+                <h3>{{ module.title }}</h3>
+                <span
+                  >{{ module.lessons.length }} lessons ·
+                  {{ completedInModule(module) }} completed</span
+                >
+              </div>
+              <app-icon name="chevron-down" [size]="17" />
+            </div>
+            <div class="lesson-list">
+              @for (lesson of module.lessons; track lesson.id) {
+                <div
+                  class="lesson-row"
+                  [class.lesson-row--current]="lesson.current"
+                  [class.lesson-row--done]="lesson.completed"
+                >
+                  <span class="lesson-state">
+                    @if (lesson.completed) {
+                      <app-icon name="check" [size]="13" />
+                    } @else {
+                      <span class="lesson-number">{{ lesson.id | number: '2.0' }}</span>
+                    }</span
+                  ><span class="lesson-copy"
+                    ><strong>{{ lesson.title }}</strong
+                    ><small>{{ lesson.type }} · {{ lesson.duration }}</small></span
+                  >
+                  @if (lesson.current) {
+                    <button
+                      class="button button--primary button--small"
+                      type="button"
+                      (click)="completeLesson(lesson.id)"
+                    >
+                      Complete <app-icon name="check" [size]="13" />
+                    </button>
+                  } @else if (!lesson.completed) {
+                    <button
+                      class="lesson-action"
+                      type="button"
+                      aria-label="Start lesson"
+                      (click)="completeLesson(lesson.id)"
+                    >
+                      <app-icon name="play" [size]="14" />
+                    </button>
+                  } @else {
+                    <span class="done-label">Done</span>
+                  }
+                </div>
+              }
+            </div>
+          </section>
+        } @empty {
+          <div class="curriculum-empty card">
+            <app-icon name="book" [size]="24" /><strong>Curriculum coming soon</strong>
+            <p>The backend team can supply module and lesson data through the API adapter.</p>
+          </div>
+        }
+      </main>
+      <aside class="detail-aside">
+        <section class="enroll-card card">
+          <span class="status-pill status-pill--blue">Published course</span>
+          <h2>{{ selectedCourse.title }}</h2>
+          <div class="detail-facts">
+            <span
+              ><app-icon name="clock" [size]="15" /><b>{{ selectedCourse.duration }}</b
+              ><small>Duration</small></span
+            ><span
+              ><app-icon name="book" [size]="15" /><b>{{ selectedCourse.lessons }}</b
+              ><small>Lessons</small></span
+            ><span
+              ><app-icon name="award" [size]="15" /><b>{{ selectedCourse.rating }}</b
+              ><small>Rating</small></span
+            >
+          </div>
+          <button
+            class="button button--primary"
+            type="button"
+            (click)="enrollOrContinue(selectedCourse.enrolled)"
+          >
+            {{ selectedCourse.enrolled ? 'Continue learning' : 'Enroll now' }}
+            <app-icon name="arrow-right" [size]="15" />
+          </button>
+          <p class="secure-note">
+            <app-icon name="lock" [size]="13" /> Your progress is saved securely
+          </p>
+        </section>
+        <section class="skills-card card">
+          <h2>Skills you will build</h2>
+          <div class="skill-chips">
+            @for (tag of selectedCourse.tags; track tag) {
+              <span>{{ tag }}</span>
+            }
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+} @else {
+  <div class="not-found card">
+    <app-icon name="book" [size]="28" />
+    <h1>Course not found</h1>
+    <p>This course may have moved or is not published.</p>
+    <a class="button button--primary" routerLink="/courses">Back to courses</a>
+  </div>
+}

@@ -1,0 +1,277 @@
+<section class="role-workspace-page">
+  <div class="page-heading workspace-heading">
+    <div>
+      <span class="eyebrow">{{ config().eyebrow }}</span>
+      <h1>{{ config().title }}</h1>
+      <p>{{ config().description }}</p>
+    </div>
+    <div class="workspace-actions">
+      <button
+        class="button button--secondary"
+        type="button"
+        (click)="runAction(config().secondaryAction.action, config().secondaryAction.route)"
+      >
+        {{ config().secondaryAction.label }}</button
+      ><button
+        class="button button--primary"
+        type="button"
+        (click)="runAction(config().primaryAction.action, config().primaryAction.route)"
+      >
+        {{ config().primaryAction.label }} <app-icon name="arrow-right" [size]="14" />
+      </button>
+    </div>
+  </div>
+  <div class="workspace-tabs" role="tablist" aria-label="Workspace sections">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="config().view === 'overview'"
+      [class.workspace-tab--active]="config().view === 'overview'"
+      class="workspace-tab"
+      (click)="setView('overview')"
+    >
+      Overview
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="config().view === 'catalog'"
+      [class.workspace-tab--active]="config().view === 'catalog'"
+      class="workspace-tab"
+      (click)="setView('catalog')"
+    >
+      {{
+        config().role === 'instructor'
+          ? 'Courses'
+          : config().role === 'management'
+            ? 'Programs'
+            : 'Content'
+      }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="config().view === 'people'"
+      [class.workspace-tab--active]="config().view === 'people'"
+      class="workspace-tab"
+      (click)="setView('people')"
+    >
+      {{ config().role === 'admin' ? 'Users' : 'People' }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="config().view === 'reports'"
+      [class.workspace-tab--active]="config().view === 'reports'"
+      class="workspace-tab"
+      (click)="setView('reports')"
+    >
+      Reports
+    </button>
+  </div>
+  @if (config().view === 'overview') {
+    <div class="workspace-stats">
+      @for (stat of config().stats; track stat.label) {
+        <article class="workspace-stat card">
+          <span class="workspace-stat-icon" [class]="'workspace-stat-icon--' + stat.tone"
+            ><app-icon [name]="stat.icon" [size]="20"
+          /></span>
+          <div>
+            <span>{{ stat.label }}</span
+            ><strong>{{ stat.value }}</strong
+            ><small>{{ stat.change }}</small>
+          </div>
+        </article>
+      }
+    </div>
+    <div class="workspace-grid">
+      <section class="workspace-panel card">
+        <div class="section-heading">
+          <div>
+            <h2>{{ config().chartTitle }}</h2>
+            <p>{{ config().chartDescription }}</p>
+          </div>
+          <span class="chart-period"
+            >Last 12 weeks <app-icon name="chevron-down" [size]="14"
+          /></span>
+        </div>
+        <div class="workspace-chart">
+          <div class="workspace-chart-y">
+            <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+          </div>
+          <div class="workspace-chart-bars">
+            @for (value of config().chart; track $index) {
+              <div class="workspace-bar-column">
+                <i [style.height.%]="value"></i
+                ><span>{{
+                  ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'][$index]
+                }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="chart-summary">
+          <span><strong>84%</strong> average engagement</span
+          ><span class="chart-up"><app-icon name="trend" [size]="14" /> 12.8% this period</span>
+        </div>
+      </section>
+      <section class="workspace-panel task-panel card">
+        <div class="section-heading">
+          <div>
+            <h2>Needs your attention</h2>
+            <p>Small actions with a big impact.</p>
+          </div>
+          <span class="task-count">{{ config().tasks.length }}</span>
+        </div>
+        <div class="task-list">
+          @for (task of config().tasks; track task.title) {
+            <div class="task-row">
+              <span class="task-icon" [class]="'task-icon--' + task.tone"
+                ><app-icon [name]="task.icon" [size]="16" /></span
+              ><span class="task-copy"
+                ><strong>{{ task.title }}</strong
+                ><small>{{ task.detail }}</small></span
+              ><span class="task-status">{{ task.status }}</span>
+            </div>
+          }
+        </div>
+        <button class="text-link task-link" type="button">
+          View all tasks <app-icon name="arrow-right" [size]="14" />
+        </button>
+      </section>
+    </div>
+    <section class="workspace-list-panel card">
+      <div class="section-heading">
+        <div>
+          <h2>{{ config().view === 'people' ? 'Recent people' : 'Recently updated' }}</h2>
+          <p>{{ config().searchPlaceholder }}</p>
+        </div>
+        <button
+          class="text-link"
+          type="button"
+          (click)="setView(config().view === 'people' ? 'people' : 'catalog')"
+        >
+          View all <app-icon name="arrow-right" [size]="14" />
+        </button>
+      </div>
+      <div class="workspace-list">
+        @for (item of visibleItems(); track item.id) {
+          <div class="workspace-list-row">
+            <span class="list-avatar" [class]="'list-avatar--' + item.tone">{{
+              item.initials
+            }}</span
+            ><span class="list-copy"
+              ><strong>{{ item.title }}</strong
+              ><small>{{ item.subtitle }}</small></span
+            ><span class="list-meta">{{ item.meta }}</span
+            ><span
+              class="status-pill"
+              [class.status-pill--green]="
+                item.status === 'Published' ||
+                item.status === 'Healthy' ||
+                item.status === 'On track' ||
+                item.status === 'Active'
+              "
+              [class.status-pill--orange]="
+                item.status === 'Needs attention' ||
+                item.status === 'At risk' ||
+                item.status === 'In review' ||
+                item.status === 'Pending'
+              "
+              [class.status-pill--blue]="item.status === 'Ready' || item.status === 'Draft'"
+              >{{ item.status }}</span
+            ><button class="button button--secondary button--small" type="button">
+              {{ itemActionLabel(item) }} <app-icon name="arrow-right" [size]="13" />
+            </button>
+          </div>
+        } @empty {
+          <div class="workspace-empty">
+            No matching results.
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <div class="workspace-list-panel card workspace-list-panel--full">
+      <div class="workspace-toolbar">
+        <div class="workspace-search">
+          <app-icon name="search" [size]="17" /><input
+            type="search"
+            [placeholder]="config().searchPlaceholder"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+          />
+        </div>
+        <div class="workspace-filters">
+          @for (status of statuses(); track status) {
+            <button
+              type="button"
+              [class.filter-chip--active]="statusFilter() === status"
+              class="filter-chip"
+              (click)="statusFilter.set(status)"
+            >
+              {{ status }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="workspace-table">
+        <div class="workspace-table-head">
+          <span>{{ config().primaryColumn }}</span
+          ><span>{{ config().secondaryColumn }}</span
+          ><span>{{ config().metricColumn }}</span
+          ><span>Status</span><span></span>
+        </div>
+        @for (item of visibleItems(); track item.id) {
+          <div class="workspace-table-row">
+            <div class="table-person">
+              <span class="list-avatar" [class]="'list-avatar--' + item.tone">{{
+                item.initials
+              }}</span
+              ><span
+                ><strong>{{ item.title }}</strong
+                ><small>{{ item.subtitle }}</small></span
+              >
+            </div>
+            <span class="table-secondary">{{ item.subtitle }}</span>
+            <div class="table-metric">
+              @if (item.progress !== undefined) {
+                <div class="progress-track">
+                  <div class="progress-fill" [style.width.%]="item.progress"></div>
+                </div>
+                <strong>{{ item.progress }}%</strong>
+              } @else {
+                <strong>{{ item.meta }}</strong>
+              }
+            </div>
+            <span
+              class="status-pill"
+              [class.status-pill--green]="
+                item.status === 'Published' ||
+                item.status === 'Healthy' ||
+                item.status === 'On track' ||
+                item.status === 'Active'
+              "
+              [class.status-pill--orange]="
+                item.status === 'Needs attention' ||
+                item.status === 'At risk' ||
+                item.status === 'In review' ||
+                item.status === 'Pending'
+              "
+              [class.status-pill--blue]="item.status === 'Ready' || item.status === 'Draft'"
+              >{{ item.status }}</span
+            ><button class="button button--secondary button--small" type="button">
+              {{ itemActionLabel(item) }} <app-icon name="arrow-right" [size]="13" />
+            </button>
+          </div>
+        } @empty {
+          <div class="workspace-empty">
+            No matching results.
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>
