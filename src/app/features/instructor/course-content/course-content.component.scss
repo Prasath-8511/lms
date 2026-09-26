@@ -1,0 +1,19 @@
+.course-content-page { display: block; }
+.content-modules { margin-top: 20px; padding: 20px; }
+.content-modules > .section-heading > span { color: var(--ink-muted); font-size: 10px; }
+.module-editor { margin-top: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; }
+.module-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.module-editor-heading > div:first-child { display: grid; gap: 4px; }
+.module-editor-heading span { color: var(--brand); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.module-editor-heading h3 { margin: 0; color: var(--ink-strong); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; }
+.module-actions { display: flex; align-items: center; gap: 5px; }
+.lesson-editor-list { display: grid; gap: 7px; margin-top: 13px; }
+.lesson-editor-row { display: flex; min-height: 44px; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 8px; background: #f8faff; }
+.lesson-index { display: grid; width: 25px; height: 25px; flex: 0 0 auto; place-items: center; border-radius: 7px; background: #eaf0ff; color: var(--brand); font-size: 9px; font-weight: 800; }
+.lesson-editor-row > span:nth-child(2) { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.lesson-editor-row strong { overflow: hidden; color: var(--ink-strong); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.lesson-editor-row small { color: var(--ink-muted); font-size: 9px; }
+.lesson-editor-row .text-link { padding: 4px; border: 0; background: transparent; cursor: pointer; font-size: 9px; }
+.lesson-editor-row .icon-button { width: 28px; height: 28px; }
+.empty-lessons { margin: 12px 0 2px; color: var(--ink-muted); font-size: 10px; }
+@media (max-width: 650px) { .module-editor-heading { align-items: flex-start; flex-direction: column; }.module-actions { width: 100%; }.module-actions .button { margin-left: auto; } }

@@ -130,11 +130,14 @@
           ><span><app-icon name="calendar" [size]="15" /> {{ assessment.dueDate }}</span
           ><span><app-icon name="target" [size]="15" /> {{ assessment.questions }} questions</span>
         </div>
+        @if (actionError()) {
+          <p class="login-error" role="alert">{{ actionError() }}</p>
+        }
         <div class="modal-actions">
           <button class="button button--secondary" type="button" (click)="closeAssessment()">
             Not now</button
-          ><button class="button button--primary" type="button" (click)="closeAssessment()">
-            {{ assessment.status === 'Completed' ? 'Review answers' : 'Begin assessment' }}
+          ><button class="button button--primary" type="button" [disabled]="isStarting()" (click)="startAssessment(assessment)">
+            {{ isStarting() ? 'Starting…' : assessment.status === 'Completed' ? 'Review answers' : 'Begin assessment' }}
             <app-icon name="arrow-right" [size]="14" />
           </button>
         </div>

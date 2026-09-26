@@ -15,6 +15,8 @@ import { IconComponent } from '../../../shared/components/icon/icon';
 export class CoursesPage {
   protected readonly store = inject(LmsStoreService);
   private readonly route = inject(ActivatedRoute);
+  protected readonly enrollmentInProgress = signal<number | null>(null);
+  protected readonly enrollmentError = signal('');
   protected readonly searchTerm = signal('');
   protected readonly selectedCategory = signal('All courses');
   protected readonly categories = [
@@ -52,5 +54,18 @@ export class CoursesPage {
 
   protected setCategory(category: string): void {
     this.selectedCategory.set(category);
+  }
+
+  protected enrollCourse(courseId: number): void {
+    if (this.enrollmentInProgress() !== null) return;
+    this.enrollmentInProgress.set(courseId);
+    this.enrollmentError.set('');
+    this.store.enroll(courseId).subscribe({
+      next: () => this.enrollmentInProgress.set(null),
+      error: (error: { error?: { message?: string }; message?: string }) => {
+        this.enrollmentInProgress.set(null);
+        this.enrollmentError.set(error.error?.message ?? error.message ?? 'Unable to enroll in this course.');
+      },
+    });
   }
 }

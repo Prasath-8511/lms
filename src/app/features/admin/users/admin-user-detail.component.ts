@@ -1,21 +1,34 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AdminApiService } from '../data-access/admin-api.service';
+import { finalize } from 'rxjs';
+import { AdminApiService, AdminUser } from '../data-access/admin-api.service';
 import { FeaturePageComponent } from '../../../shared/components/feature-page/feature-page.component';
-import { FeaturePageConfig } from '../../../shared/models/feature-page.models';
+import { ResourceFormDialogComponent } from '../../../shared/components/resource-form-dialog/resource-form-dialog.component';
+import { FeaturePageConfig, FeaturePageItem } from '../../../shared/models/feature-page.models';
+import { ResourceField, ResourceFormValue } from '../../../shared/models/resource-form.models';
 
 @Component({
   selector: 'app-admin-user-detail-page',
   standalone: true,
-  imports: [FeaturePageComponent],
-  template: '<app-feature-page [config]="config" />',
+  imports: [FeaturePageComponent, ResourceFormDialogComponent],
+  template: '<app-feature-page [config]="config()" (primaryAction)="openEdit()" />@if (dialogOpen()) {<app-resource-form-dialog [open]="true" title="Edit user" description="Update this user’s role or account status." [fields]="editFields" [initialValue]="formValue()" [submitting]="submitting()" [errorMessage]="errorMessage()" submitLabel="Save changes" (invalid)="errorMessage.set($event)" (value)="save($event)" (cancelled)="closeDialog()" />}',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminUserDetailPage {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(AdminApiService);
   protected readonly userId = Number(this.route.snapshot.paramMap.get('id') ?? 1);
-  protected readonly config: FeaturePageConfig = {
+  protected readonly dialogOpen = signal(false);
+  protected readonly submitting = signal(false);
+  protected readonly errorMessage = signal('');
+  protected readonly formValue = signal<ResourceFormValue>({});
+  protected readonly editFields: ResourceField[] = [
+    { key: 'name', label: 'Full name', type: 'text', required: true },
+    { key: 'email', label: 'Email address', type: 'email', required: true },
+    { key: 'role', label: 'Role', type: 'select', required: true, options: [{ label: 'Learner', value: 'learner' }, { label: 'Instructor', value: 'instructor' }, { label: 'Management', value: 'management' }, { label: 'Admin', value: 'admin' }] },
+    { key: 'status', label: 'Status', type: 'select', required: true, options: [{ label: 'Active', value: 'Active' }, { label: 'Invited', value: 'Invited' }, { label: 'Suspended', value: 'Suspended' }] },
+  ];
+  protected readonly config = signal<FeaturePageConfig>({
     eyebrow: 'Administration',
     title: 'User details',
     description: 'Review a user account, access context, and recent activity.',
@@ -23,40 +36,81 @@ export class AdminUserDetailPage {
     primaryAction: 'Edit user',
     secondaryAction: 'Back to users',
     secondaryRoute: '/admin/users',
-    stats: [
-      { label: 'Account status', value: 'Active', change: 'Last active today', tone: 'green' },
-      { label: 'Role', value: 'Learner', change: 'Engineering team', tone: 'blue' },
-      { label: 'Learning hours', value: '42h', change: 'This month', tone: 'violet' },
-      { label: 'Certificates', value: '5', change: 'Verified', tone: 'orange' },
-    ],
-    items: [
-      {
-        title: 'Personal information',
-        subtitle: 'Identity',
-        meta: 'Alex Johnson',
-        status: 'Verified',
-        statusTone: 'green',
-        action: 'Edit',
-      },
-      {
-        title: 'Role and permissions',
-        subtitle: 'Access',
-        meta: 'Learner',
-        status: 'Active',
-        statusTone: 'blue',
-        action: 'Review',
-      },
-      {
-        title: 'Recent activity',
-        subtitle: 'Audit trail',
-        meta: '12 events',
-        status: 'Available',
-        statusTone: 'violet',
-        action: 'View activity',
-      },
-    ],
-  };
+    stats: [],
+    items: [],
+    loading: true,
+    errorMessage: '',
+    emptyMessage: 'This user could not be loaded.',
+  });
+
   constructor() {
-    this.api.getUser(this.userId).subscribe();
+    this.load();
+  }
+
+  private load(): void {
+    this.api
+      .getUser(this.userId)
+      .pipe(finalize(() => this.patch({ loading: false })))
+      .subscribe({
+        next: (user) => this.apply(user),
+        error: (error: { error?: { message?: string }; message?: string }) =>
+          this.patch({ errorMessage: error.error?.message ?? error.message ?? 'Unable to load this user.' }),
+      });
+  }
+
+  protected openEdit(): void {
+    this.errorMessage.set('');
+    this.dialogOpen.set(true);
+  }
+
+  protected closeDialog(): void {
+    this.dialogOpen.set(false);
+    this.errorMessage.set('');
+  }
+
+  protected save(value: ResourceFormValue): void {
+    if (this.submitting()) {
+      return;
+    }
+    this.submitting.set(true);
+    this.api
+      .updateUser(this.userId, {
+        name: String(value['name']).trim(),
+        email: String(value['email']).trim(),
+        role: String(value['role']),
+        status: String(value['status']),
+      })
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: (user) => {
+          this.closeDialog();
+          this.apply(user);
+        },
+        error: (error: { error?: { message?: string }; message?: string }) =>
+          this.patch({ errorMessage: error.error?.message ?? error.message ?? 'Unable to save this user.' }),
+      });
+  }
+
+  private apply(user: AdminUser): void {
+    this.formValue.set({ name: user.name, email: user.email, role: user.role, status: user.status });
+    const items: FeaturePageItem[] = [
+      { id: user.id, title: 'Personal information', subtitle: 'Identity', meta: user.name, status: user.email, statusTone: 'blue', action: 'Edit' },
+      { id: user.id, title: 'Role and permissions', subtitle: 'Access', meta: user.role, status: 'Active', statusTone: 'green', action: 'Review' },
+      { id: user.id, title: 'Account status', subtitle: 'Governance', meta: user.status, status: user.status, statusTone: user.status === 'Active' ? 'green' : 'orange', action: 'View activity' },
+    ];
+    this.patch({
+      errorMessage: '',
+      items,
+      stats: [
+        { label: 'Account status', value: user.status, change: user.email, tone: user.status === 'Active' ? 'green' : 'orange' },
+        { label: 'Role', value: user.role, change: 'Current access level', tone: 'blue' },
+        { label: 'User ID', value: String(user.id), change: 'Internal identifier', tone: 'violet' },
+        { label: 'Sections', value: String(items.length), change: 'Available on this page', tone: 'orange' },
+      ],
+    });
+  }
+
+  private patch(partial: Partial<FeaturePageConfig>): void {
+    this.config.update((config) => ({ ...config, ...partial }));
   }
 }

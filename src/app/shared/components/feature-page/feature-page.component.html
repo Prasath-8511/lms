@@ -12,7 +12,7 @@
             config().secondaryAction
           }}</a>
         } @else {
-          <button class="button button--secondary" type="button">
+          <button class="button button--secondary" type="button" (click)="secondaryAction.emit()">
             {{ config().secondaryAction }}
           </button>
         }
@@ -22,14 +22,22 @@
           >{{ config().primaryAction }} <app-icon name="arrow-right" [size]="14"
         /></a>
       } @else {
-        <button class="button button--primary" type="button">
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="config().loading"
+          (click)="primaryAction.emit()"
+        >
           {{ config().primaryAction }} <app-icon name="plus" [size]="14" />
         </button>
       }
     </div>
   </div>
   <div class="feature-stats">
-    @for (stat of config().stats; track stat.label) {
+    @if (config().loading) {
+      <div class="feature-loading" role="status">Loading data…</div>
+    } @else {
+      @for (stat of config().stats; track stat.label) {
       <article class="feature-stat card">
         <span class="feature-stat-icon" [class]="'feature-stat-icon--' + stat.tone"
           ><app-icon name="sparkles" [size]="18"
@@ -39,9 +47,13 @@
           ><strong>{{ stat.value }}</strong
           ><small>{{ stat.change }}</small>
         </div>
-      </article>
+        </article>
+      }
     }
   </div>
+  @if (config().errorMessage) {
+  <div class="feature-error" role="alert">{{ config().errorMessage }}</div>
+  }
   <section class="feature-list card">
     <div class="section-heading">
       <div>
@@ -62,15 +74,16 @@
           </div>
           <span>{{ item.subtitle }}</span
           ><span>{{ item.meta }}</span
-          ><app-status-pill [label]="item.status" [tone]="item.statusTone" /><button
-            class="button button--secondary button--small"
-            type="button"
-          >
-            {{ item.action }} <app-icon name="arrow-right" [size]="13" />
-          </button>
+          ><app-status-pill [label]="item.status" [tone]="item.statusTone" />@if (item.route) {
+            <a class="button button--secondary button--small" [routerLink]="item.route">{{ item.action }} <app-icon name="arrow-right" [size]="13" /></a>
+          } @else {
+            <button class="button button--secondary button--small" type="button" (click)="itemAction.emit(item)">
+              {{ item.action }} <app-icon name="arrow-right" [size]="13" />
+            </button>
+          }
         </div>
       } @empty {
-        <div class="empty-row">No records are available yet.</div>
+        <div class="empty-row">{{ config().emptyMessage ?? 'No records are available yet.' }}</div>
       }
     </div>
   </section>

@@ -1,0 +1,27 @@
+<section class="attempt-page">
+  @if (isListMode()) {
+    <app-feature-page [config]="listConfig()" (itemAction)="openAttempt($event)" />
+  } @else {
+  <a class="back-link" routerLink="/attempts"><app-icon name="arrow-right" [size]="14" /> Back to attempts</a>
+  @if (loading()) {
+    <div class="attempt-state card" role="status"><span class="spinner"></span><strong>Loading assessment…</strong></div>
+  } @else if (errorMessage() && !attempt()) {
+    <div class="attempt-state card error" role="alert"><strong>Unable to load this attempt</strong><p>{{ errorMessage() }}</p><button class="button button--secondary button--small" type="button" (click)="back()">Back to attempts</button></div>
+  } @else if (attempt(); as currentAttempt) {
+    @if (result(); as completedResult) {
+      <section class="result-card card"><span class="result-icon"><app-icon name="award" [size]="27" /></span><span class="eyebrow">Assessment result</span><h1>{{ completedResult.passed ? 'Assessment passed' : 'Assessment completed' }}</h1><p>{{ completedResult.message ?? 'Your result has been saved.' }}</p><strong class="result-score">{{ completedResult.score ?? 0 }}%</strong><div class="result-actions"><button class="button button--secondary" type="button" (click)="back()">Back to attempts</button><a class="button button--primary" routerLink="/assessments">View assessments <app-icon name="arrow-right" [size]="14" /></a></div></section>
+    } @else if (isExpired()) {
+      <div class="attempt-state card error" role="alert"><strong>This attempt has expired</strong><p>Return to assessments to start a new attempt.</p><a class="button button--primary button--small" routerLink="/assessments">Back to assessments</a></div>
+    } @else if (currentQuestion(); as question) {
+      <div class="attempt-header"><div><span class="eyebrow">Assessment attempt</span><h1>{{ currentAttempt.assessmentId ? 'Knowledge check' : 'Assessment' }}</h1><p>Question {{ currentIndex() + 1 }} of {{ questions().length }} · {{ answeredCount() }} answered</p></div><span class="attempt-status">{{ savingAnswer() ? 'Saving…' : 'In progress' }}</span></div>
+      <div class="attempt-progress"><div class="progress-track"><div class="progress-fill" [style.width.%]="((currentIndex() + 1) / questions().length) * 100"></div></div><span>{{ currentIndex() + 1 }}/{{ questions().length }}</span></div>
+      <section class="question-card card"><div class="question-heading"><span class="question-number">{{ currentIndex() + 1 }}</span><div><span class="question-type">{{ question.type === 'multiple-choice' ? 'Select all that apply' : question.type === 'text' ? 'Written response' : 'Choose one answer' }}</span><h2>{{ question.prompt }}</h2></div><span class="marks">{{ question.marks }} marks</span></div>
+        @if (question.type === 'text') { <textarea class="text-answer" rows="6" [value]="textAnswer()" (input)="setAnswer($any($event.target).value)" placeholder="Type your answer"></textarea> }
+        @else { <div class="option-list">@for (option of question.options; track option; let optionIndex = $index) { <button type="button" class="option-button" [class.option-button--selected]="isSelected(option)" (click)="question.type === 'multiple-choice' ? toggleOption(option) : setAnswer(option)"><span class="option-marker">{{ question.type === 'multiple-choice' ? (isSelected(option) ? '✓' : '') : (isSelected(option) ? '●' : '') }}</span><span>{{ option }}</span></button> }</div> }
+        @if (errorMessage()) { <p class="question-error" role="alert">{{ errorMessage() }}</p> }
+        <div class="question-actions"><button class="button button--secondary" type="button" [disabled]="currentIndex() === 0" (click)="previous()"><app-icon name="arrow-right" [size]="14" /> Previous</button><span></span><button class="button button--secondary" type="button" [disabled]="savingAnswer()" (click)="saveAnswer()">{{ savingAnswer() ? 'Saving…' : 'Save answer' }}</button>@if (isLastQuestion()) { <button class="button button--primary" type="button" [disabled]="submitting()" (click)="submit()">{{ submitting() ? 'Submitting…' : 'Submit assessment' }} <app-icon name="arrow-right" [size]="14" /></button> } @else { <button class="button button--primary" type="button" (click)="next()">Next <app-icon name="arrow-right" [size]="14" /></button> }</div>
+      </section>
+    } @else { <div class="attempt-state card"><strong>No questions are available</strong><p>This attempt does not contain question data.</p></div> }
+  }
+  }
+</section>

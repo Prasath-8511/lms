@@ -4,4 +4,5 @@ export const API_CONFIG = {
   baseUrl: environment.apiBaseUrl,
   useMocks: environment.useMocks,
   apiKeyHeader: environment.apiKeyHeader,
+  authType: environment.authType,
 } as const;

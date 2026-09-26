@@ -1,13 +1,15 @@
 export type UserRole = 'learner' | 'instructor' | 'management' | 'admin';
 
 export interface AuthUser {
-  id: number;
+  readonly id: number;
   name: string;
   email: string;
   role: UserRole;
   roleLabel: string;
   title: string;
   initials: string;
+  accessToken?: string;
+  apiKey?: string;
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

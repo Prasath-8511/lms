@@ -183,6 +183,15 @@ export const routes: Routes = [
       import('./features/learner/assessments/assessments').then((m) => m.AssessmentsPage),
   },
   {
+    path: 'attempts/:attemptId',
+    canActivate: [authGuard, roleGuard, activeLearnerGuard],
+    data: { roles: ['learner'] },
+    loadComponent: () =>
+      import('./features/learner/attempts/attempts.component').then(
+        (m) => m.AssessmentAttemptsPage,
+      ),
+  },
+  {
     path: 'attempts',
     canActivate: [authGuard, roleGuard, activeLearnerGuard],
     data: { roles: ['learner'] },

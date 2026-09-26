@@ -1,0 +1,20 @@
+@if (open()) {
+  <div class="resource-dialog-backdrop" (click)="cancelled.emit()">
+    <section class="resource-dialog" role="dialog" aria-modal="true" [attr.aria-label]="title()" (click)="$event.stopPropagation()">
+      <div class="resource-dialog-heading"><div><h2>{{ title() }}</h2><p>{{ description() }}</p></div><button class="icon-button" type="button" aria-label="Close dialog" (click)="cancelled.emit()"><app-icon name="close" [size]="18" /></button></div>
+      <form (submit)="$event.preventDefault(); submit()">
+        @for (field of fields(); track field.key) {
+          <label class="resource-field"><span>{{ field.label }} @if (field.required) { <em>*</em> }</span>
+            @if (field.type === 'textarea') { <textarea [rows]="field.rows ?? 4" [placeholder]="field.placeholder ?? ''" [value]="fieldValue(field)" (input)="setValue(field, $any($event.target).value)"></textarea> }
+            @else if (field.type === 'select') { <select [value]="fieldValue(field)" (change)="setValue(field, $any($event.target).value)">@for (option of field.options ?? []; track option.value) { <option [value]="option.value">{{ option.label }}</option> }</select> }
+            @else if (field.type === 'checkbox') { <input class="resource-checkbox" type="checkbox" [checked]="!!fieldValue(field)" (change)="setValue(field, $any($event.target).checked)" /> }
+            @else { <input [type]="field.type" [min]="field.min ?? null" [max]="field.max ?? null" [placeholder]="field.placeholder ?? ''" [value]="fieldValue(field)" (input)="setValue(field, $any($event.target).value)" /> }
+            @if (field.hint) { <small>{{ field.hint }}</small> }
+          </label>
+        }
+        @if (errorMessage()) { <p class="resource-dialog-error" role="alert">{{ errorMessage() }}</p> }
+        <div class="resource-dialog-actions">@if (deleteLabel()) { <button class="button button--secondary resource-delete" type="button" (click)="deleted.emit()">{{ deleteLabel() }}</button> }<button class="button button--secondary" type="button" (click)="cancelled.emit()">Cancel</button><button class="button button--primary" type="submit" [disabled]="submitting()">{{ submitting() ? 'Saving…' : submitLabel() }} <app-icon name="check" [size]="14" /></button></div>
+      </form>
+    </section>
+  </div>
+}

@@ -1,190 +1,124 @@
 @if (auth.isAuthenticated()) {
-  <div class="app-frame" (click)="closeOverlays()">
-    <aside class="sidebar" [class.sidebar--open]="sidebarOpen()" (click)="$event.stopPropagation()">
-      <div class="brand-row">
-        <a class="brand" [routerLink]="auth.homeRoute()" (click)="sidebarOpen.set(false)">
-          <span class="brand-mark">LS</span>
-          <span class="brand-copy"
-            ><strong>LearnSphere</strong><small>Enterprise Learning</small></span
-          >
+<div class="app-frame" (click)="closeOverlays()">
+  <aside class="sidebar" [class.sidebar--open]="sidebarOpen()" (click)="$event.stopPropagation()">
+    <div class="brand-row">
+      <a class="brand" [routerLink]="auth.homeRoute()" (click)="sidebarOpen.set(false)">
+        <span class="brand-mark">LS</span>
+        <span class="brand-copy"><strong>LearnSphere</strong><small>Enterprise Learning</small></span>
+      </a>
+      <button class="icon-button sidebar-close" type="button" aria-label="Close navigation"
+        (click)="sidebarOpen.set(false)">
+        <app-icon name="close" [size]="19" />
+      </button>
+    </div>
+
+    <nav class="side-nav" aria-label="Primary navigation">
+      @for (group of navGroups(); track group.label) {
+      <div class="nav-group">
+        <span class="nav-group-label">{{ group.label }}</span>
+        @for (item of group.items; track item.route) {
+        <a class="nav-link" [routerLink]="item.route" routerLinkActive="nav-link--active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }" (click)="sidebarOpen.set(false)">
+          <app-icon [name]="item.icon" [size]="19" />
+          <span>{{ item.label }}</span>
+          @if (item.label === 'Assessments') {
+          <span class="nav-count">3</span>
+          }
         </a>
-        <button
-          class="icon-button sidebar-close"
-          type="button"
-          aria-label="Close navigation"
-          (click)="sidebarOpen.set(false)"
-        >
-          <app-icon name="close" [size]="19" />
-        </button>
-      </div>
-
-      <nav class="side-nav" aria-label="Primary navigation">
-        @for (group of navGroups(); track group.label) {
-          <div class="nav-group">
-            <span class="nav-group-label">{{ group.label }}</span>
-            @for (item of group.items; track item.route) {
-              <a
-                class="nav-link"
-                [routerLink]="item.route"
-                routerLinkActive="nav-link--active"
-                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-                (click)="sidebarOpen.set(false)"
-              >
-                <app-icon [name]="item.icon" [size]="19" />
-                <span>{{ item.label }}</span>
-                @if (item.label === 'Assessments') {
-                  <span class="nav-count">3</span>
-                }
-              </a>
-            }
-          </div>
         }
-        <div class="nav-group nav-group--bottom">
-          <span class="nav-group-label">Account</span>
-          <a
-            class="nav-link"
-            routerLink="/help-support"
-            routerLinkActive="nav-link--active"
-            (click)="sidebarOpen.set(false)"
-            ><app-icon name="help" [size]="19" /><span>Help &amp; Support</span></a
-          >
-          <a
-            class="nav-link"
-            routerLink="/settings"
-            routerLinkActive="nav-link--active"
-            (click)="sidebarOpen.set(false)"
-            ><app-icon name="settings" [size]="19" /><span>Settings</span></a
-          >
-          <button
-            class="nav-link nav-link--muted nav-link--button"
-            type="button"
-            (click)="logout()"
-          >
-            <app-icon name="logout" [size]="19" /><span>Logout</span>
-          </button>
-        </div>
-      </nav>
+      </div>
+      }
+      <div class="nav-group nav-group--bottom">
+        <span class="nav-group-label">Account</span>
+        <a class="nav-link" routerLink="/help-support" routerLinkActive="nav-link--active"
+          (click)="sidebarOpen.set(false)"><app-icon name="help" [size]="19" /><span>Help &amp; Support</span></a>
+        <a class="nav-link" routerLink="/settings" routerLinkActive="nav-link--active"
+          (click)="sidebarOpen.set(false)"><app-icon name="settings" [size]="19" /><span>Settings</span></a>
+        <button class="nav-link nav-link--muted nav-link--button" type="button" (click)="logout()">
+          <app-icon name="logout" [size]="19" /><span>Logout</span>
+        </button>
+      </div>
+    </nav>
 
-      <div class="sidebar-footer">
-        <div class="help-card">
-          <span class="help-card-icon"><app-icon name="sparkles" [size]="18" /></span
-          ><strong>Keep growing</strong>
-          <p>Small steps add up to big skills.</p>
-          <a [routerLink]="auth.role() === 'learner' ? '/courses' : auth.homeRoute()"
-            >Explore workspace <app-icon name="arrow-right" [size]="14"
-          /></a>
+    <div class="sidebar-footer">
+      <div class="help-card">
+        <span class="help-card-icon"><app-icon name="sparkles" [size]="18" /></span><strong>Keep growing</strong>
+        <p>Small steps add up to big skills.</p>
+        <a [routerLink]="auth.role() === 'learner' ? '/courses' : auth.homeRoute()">Explore workspace <app-icon
+            name="arrow-right" [size]="14" /></a>
+      </div>
+    </div>
+  </aside>
+
+  @if (sidebarOpen()) {
+  <button class="sidebar-backdrop" type="button" aria-label="Close navigation"
+    (click)="sidebarOpen.set(false)"></button>
+  }
+  <main class="main-area">
+    <header class="topbar" (click)="$event.stopPropagation()">
+      <button class="icon-button menu-button" type="button" aria-label="Open navigation"
+        (click)="sidebarOpen.set(true)">
+        <app-icon name="menu" [size]="21" />
+      </button>
+      <form class="global-search" (submit)="$event.preventDefault(); submitSearch()">
+        <app-icon name="search" [size]="19" />
+        <input type="search" name="search" placeholder="Search courses, skills, certifications..."
+          aria-label="Search courses, skills, certifications" [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)" />
+        <kbd>⌘ K</kbd>
+      </form>
+      <div class="topbar-actions">
+        <span class="data-source" [class.data-source--live]="dataSourceLabel() === 'Live API'"><span
+            class="data-source-dot"></span>{{ dataSourceLabel() }}</span>
+        <div class="topbar-popover-wrap">
+          <button class="icon-button notification-button" type="button" aria-label="Notifications"
+            [attr.aria-expanded]="notificationsOpen()" (click)="toggleNotifications()">
+            <app-icon name="bell" [size]="20" />
+            @if (unreadCount() > 0) {
+            <span class="notification-dot">{{ unreadCount() }}</span>
+            }
+          </button>
+          @if (notificationsOpen()) {
+          <div class="popover notification-popover">
+            <div class="popover-heading"><strong>Notifications</strong><span>3 new</span></div>
+            <div class="notification-row">
+              <span class="notification-symbol notification-symbol--blue"><app-icon name="sparkles"
+                  [size]="16" /></span><span><strong>New learning paths</strong><small>Explore your updated
+                  catalog</small></span>
+            </div>
+            <div class="notification-row">
+              <span class="notification-symbol notification-symbol--green"><app-icon name="check"
+                  [size]="16" /></span><span><strong>Weekly goal on track</strong><small>You are 2 lessons
+                  away</small></span>
+            </div>
+            <a routerLink="/announcements" (click)="closeOverlays()">View all updates <app-icon name="arrow-right"
+                [size]="14" /></a>
+          </div>
+          }
+        </div>
+        <div class="profile-menu-wrap">
+          <button class="profile-trigger" type="button" [attr.aria-expanded]="profileOpen()" (click)="toggleProfile()">
+            <span class="avatar avatar--small">{{ profile().initials }}</span><span
+              class="profile-trigger-copy"><strong>{{ profile().name }}</strong><small>{{ profile().role
+                }}</small></span><app-icon name="chevron-down" [size]="16" />
+          </button>
+          @if (profileOpen()) {
+          <div class="popover profile-popover">
+            <div class="profile-popover-header">
+              <span class="avatar">{{ profile().initials }}</span><span><strong>{{ profile().name }}</strong><small>{{
+                  profile().email }}</small></span>
+            </div>
+            <a routerLink="/settings" (click)="closeOverlays()"><app-icon name="settings" [size]="16" /> Account
+              settings</a>
+            <a routerLink="/help-support" (click)="closeOverlays()"><app-icon name="help" [size]="16" /> Get help</a>
+          </div>
+          }
         </div>
       </div>
-    </aside>
-
-    @if (sidebarOpen()) {
-      <button
-        class="sidebar-backdrop"
-        type="button"
-        aria-label="Close navigation"
-        (click)="sidebarOpen.set(false)"
-      ></button>
-    }
-    <main class="main-area">
-      <header class="topbar" (click)="$event.stopPropagation()">
-        <button
-          class="icon-button menu-button"
-          type="button"
-          aria-label="Open navigation"
-          (click)="sidebarOpen.set(true)"
-        >
-          <app-icon name="menu" [size]="21" />
-        </button>
-        <form class="global-search" (submit)="$event.preventDefault(); submitSearch()">
-          <app-icon name="search" [size]="19" />
-          <input
-            type="search"
-            name="search"
-            placeholder="Search courses, skills, certifications..."
-            aria-label="Search courses, skills, certifications"
-            [ngModel]="searchTerm()"
-            (ngModelChange)="searchTerm.set($event)"
-          />
-          <kbd>⌘ K</kbd>
-        </form>
-        <div class="topbar-actions">
-          <span class="data-source" [class.data-source--live]="dataSourceLabel() === 'Live API'"
-            ><span class="data-source-dot"></span>{{ dataSourceLabel() }}</span
-          >
-          <div class="topbar-popover-wrap">
-            <button
-              class="icon-button notification-button"
-              type="button"
-              aria-label="Notifications"
-              [attr.aria-expanded]="notificationsOpen()"
-              (click)="toggleNotifications()"
-            >
-              <app-icon name="bell" [size]="20" />
-              @if (unreadCount() > 0) {
-                <span class="notification-dot">{{ unreadCount() }}</span>
-              }
-            </button>
-            @if (notificationsOpen()) {
-              <div class="popover notification-popover">
-                <div class="popover-heading"><strong>Notifications</strong><span>3 new</span></div>
-                <div class="notification-row">
-                  <span class="notification-symbol notification-symbol--blue"
-                    ><app-icon name="sparkles" [size]="16" /></span
-                  ><span
-                    ><strong>New learning paths</strong
-                    ><small>Explore your updated catalog</small></span
-                  >
-                </div>
-                <div class="notification-row">
-                  <span class="notification-symbol notification-symbol--green"
-                    ><app-icon name="check" [size]="16" /></span
-                  ><span
-                    ><strong>Weekly goal on track</strong
-                    ><small>You are 2 lessons away</small></span
-                  >
-                </div>
-                <a routerLink="/announcements" (click)="closeOverlays()"
-                  >View all updates <app-icon name="arrow-right" [size]="14"
-                /></a>
-              </div>
-            }
-          </div>
-          <div class="profile-menu-wrap">
-            <button
-              class="profile-trigger"
-              type="button"
-              [attr.aria-expanded]="profileOpen()"
-              (click)="toggleProfile()"
-            >
-              <span class="avatar avatar--small">{{ profile().initials }}</span
-              ><span class="profile-trigger-copy"
-                ><strong>{{ profile().name }}</strong
-                ><small>{{ profile().role }}</small></span
-              ><app-icon name="chevron-down" [size]="16" />
-            </button>
-            @if (profileOpen()) {
-              <div class="popover profile-popover">
-                <div class="profile-popover-header">
-                  <span class="avatar">{{ profile().initials }}</span
-                  ><span
-                    ><strong>{{ profile().name }}</strong
-                    ><small>{{ profile().email }}</small></span
-                  >
-                </div>
-                <a routerLink="/settings" (click)="closeOverlays()"
-                  ><app-icon name="settings" [size]="16" /> Account settings</a
-                >
-                <a routerLink="/help-support" (click)="closeOverlays()"
-                  ><app-icon name="help" [size]="16" /> Get help</a
-                >
-              </div>
-            }
-          </div>
-        </div>
-      </header>
-      <div class="page-container"><router-outlet /></div>
-    </main>
-  </div>
+    </header>
+    <div class="page-container"><router-outlet /></div>
+  </main>
+</div>
 } @else {
-  <router-outlet />
+<router-outlet />
 }

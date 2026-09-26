@@ -9,6 +9,7 @@
       ><app-icon name="play" [size]="15" /> My learning</a
     >
   </div>
+  @if (enrollmentError()) { <p class="catalog-error" role="alert">{{ enrollmentError() }}</p> }
   <div class="catalog-toolbar card">
     <div class="catalog-search">
       <app-icon name="search" [size]="18" /><input
@@ -78,9 +79,10 @@
               ><button
                 class="button button--primary button--small"
                 type="button"
-                (click)="store.enroll(course.id)"
+                [disabled]="enrollmentInProgress() !== null"
+                (click)="enrollCourse(course.id)"
               >
-                Enroll <app-icon name="plus" [size]="13" />
+                {{ enrollmentInProgress() === course.id ? 'Enrolling…' : 'Enroll' }} <app-icon name="plus" [size]="13" />
               </button>
             }
           </div>

@@ -1,0 +1,4 @@
+<section class="assessment-authoring-page">
+  <app-feature-page [config]="config()" (primaryAction)="openCreate()" (itemAction)="itemAction($event)" />
+  <app-resource-form-dialog [open]="dialogOpen()" [title]="editingId() ? 'Edit assessment' : 'Create assessment'" description="Save the assessment details. Questions can be managed in the assessment editor." [fields]="fields" [initialValue]="formValue()" [submitLabel]="editingId() ? 'Save changes' : 'Create assessment'" [deleteLabel]="editingId() ? 'Delete assessment' : undefined" [submitting]="submitting()" [errorMessage]="errorMessage()" (value)="saveAssessment($event)" (invalid)="errorMessage.set($event)" (cancelled)="closeDialog()" (deleted)="deleteAssessment()" />
+</section>

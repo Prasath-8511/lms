@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { catchError, of } from 'rxjs';
+import { Observable, finalize, forkJoin, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   MOCK_ACTIVITY,
@@ -26,13 +26,30 @@ import { ApiClientService } from './api-client.service';
 @Injectable({ providedIn: 'root' })
 export class LmsStoreService {
   private readonly api = inject(ApiClientService);
-  private readonly coursesState = signal<Course[]>(MOCK_COURSES);
-  private readonly assessmentsState = signal<Assessment[]>(MOCK_ASSESSMENTS);
-  private readonly certificatesState = signal<Certificate[]>(MOCK_CERTIFICATES);
-  private readonly announcementsState = signal<Announcement[]>(MOCK_ANNOUNCEMENTS);
-  private readonly modulesState = signal<Record<number, CourseModule[]>>(MOCK_MODULES);
-  private readonly statsState = signal<LearningStats>(MOCK_STATS);
-  private readonly profileState = signal<LearnerProfile>(MOCK_PROFILE);
+  private readonly coursesState = signal<Course[]>(environment.useMocks ? MOCK_COURSES : []);
+  private readonly assessmentsState = signal<Assessment[]>(environment.useMocks ? MOCK_ASSESSMENTS : []);
+  private readonly certificatesState = signal<Certificate[]>(environment.useMocks ? MOCK_CERTIFICATES : []);
+  private readonly announcementsState = signal<Announcement[]>(environment.useMocks ? MOCK_ANNOUNCEMENTS : []);
+  private readonly modulesState = signal<Record<number, CourseModule[]>>(environment.useMocks ? MOCK_MODULES : {});
+  private readonly statsState = signal<LearningStats>(
+    environment.useMocks
+      ? MOCK_STATS
+      : {
+          coursesEnrolled: 0,
+          coursesCompleted: 0,
+          certificationsEarned: 0,
+          learningHours: 0,
+          enrolledChange: 'No data yet',
+          completedChange: 'No data yet',
+          certificationChange: 'No data yet',
+          hoursChange: 'No data yet',
+        },
+  );
+  private readonly profileState = signal<LearnerProfile>(
+    environment.useMocks
+      ? MOCK_PROFILE
+      : { name: '', role: '', email: '', initials: '', streak: 0, totalHours: 0, completedCourses: 0, certificates: 0 },
+  );
 
   readonly courses = this.coursesState.asReadonly();
   readonly assessments = this.assessmentsState.asReadonly();
@@ -41,8 +58,10 @@ export class LmsStoreService {
   readonly modules = this.modulesState.asReadonly();
   readonly stats = this.statsState.asReadonly();
   readonly profile = this.profileState.asReadonly();
-  readonly activity = signal<ActivityItem[]>(MOCK_ACTIVITY).asReadonly();
+  readonly activity = signal<ActivityItem[]>(environment.useMocks ? MOCK_ACTIVITY : []).asReadonly();
   readonly isLoading = signal(false);
+  readonly errorMessage = signal('');
+  readonly lastLoadedAt = signal<Date | null>(null);
   readonly dataSource = signal<'mock' | 'api'>(environment.useMocks ? 'mock' : 'api');
   readonly enrolledCourses = computed(() => this.courses().filter((course) => course.enrolled));
   readonly inProgressCourses = computed(() =>
@@ -68,22 +87,35 @@ export class LmsStoreService {
     return this.modules()[id] ?? [];
   }
 
-  enroll(courseId: number): void {
-    this.coursesState.update((courses) =>
-      courses.map((course) =>
-        course.id === courseId
-          ? { ...course, enrolled: true, progress: course.progress || 1 }
-          : course,
-      ),
+  enroll(courseId: number): Observable<Course> {
+    if (environment.useMocks) {
+      return of(this.toEnrolledCourse(courseId));
+    }
+    return this.api.post<Course>(`/courses/${courseId}/enroll`, {}).pipe(
+      tap((course) => this.replaceCourse(course)),
     );
-    this.statsState.update((stats) => ({
-      ...stats,
-      coursesEnrolled: stats.coursesEnrolled + 1,
-      enrolledChange: '+1 just now',
-    }));
   }
 
-  completeLesson(courseId: number, lessonId: number): void {
+  completeLesson(courseId: number, lessonId: number): Observable<Course> {
+    if (environment.useMocks) {
+      return of(this.completeLessonLocally(courseId, lessonId));
+    }
+    return this.api
+      .post<Course>(
+        `/learner/enrollments/${courseId}/lessons/${lessonId}/complete`,
+        {},
+      )
+      .pipe(tap((course) => this.replaceCourse(course)));
+  }
+
+  private replaceCourse(course: Course): void {
+    this.coursesState.update((courses) => {
+      const exists = courses.some((item) => item.id === course.id);
+      return exists ? courses.map((item) => (item.id === course.id ? course : item)) : [course, ...courses];
+    });
+  }
+
+  private applyCompletedLesson(courseId: number, lessonId: number): void {
     const courseModules = this.modules()[courseId] ?? [];
     let completedLessons = 0;
     const nextModules = courseModules.map((module) => ({
@@ -97,7 +129,6 @@ export class LmsStoreService {
         return nextLesson;
       }),
     }));
-
     this.modulesState.update((modules) => ({ ...modules, [courseId]: nextModules }));
     this.coursesState.update((courses) =>
       courses.map((course) => {
@@ -108,45 +139,65 @@ export class LmsStoreService {
           (total, module) => total + module.lessons.length,
           0,
         );
-        const progress = totalLessons
-          ? Math.round((completedLessons / totalLessons) * 100)
-          : course.progress;
         return {
           ...course,
           completedLessons,
-          progress,
+          progress: totalLessons
+            ? Math.round((completedLessons / totalLessons) * 100)
+            : course.progress,
           nextLesson: 'Keep your learning streak alive',
         };
       }),
     );
   }
 
+  private completeLessonLocally(courseId: number, lessonId: number): Course {
+    this.applyCompletedLesson(courseId, lessonId);
+    return this.getCourse(courseId) ?? this.courses()[0];
+  }
+
+  private toEnrolledCourse(courseId: number): Course {
+    const course = this.getCourse(courseId);
+    if (!course) {
+      throw new Error(`Course ${courseId} was not found`);
+    }
+    this.coursesState.update((courses) =>
+      courses.map((item) =>
+        item.id === courseId ? { ...item, enrolled: true, progress: item.progress || 1 } : item,
+      ),
+    );
+    return this.getCourse(courseId) as Course;
+  }
+
   private loadRemoteData(): void {
     this.isLoading.set(true);
-    this.api
-      .get<Course[]>('/courses')
-      .pipe(catchError(() => of(MOCK_COURSES)))
-      .subscribe((courses) => this.coursesState.set(courses));
-    this.api
-      .get<Assessment[]>('/assessments')
-      .pipe(catchError(() => of(MOCK_ASSESSMENTS)))
-      .subscribe((assessments) => this.assessmentsState.set(assessments));
-    this.api
-      .get<Certificate[]>('/certificates')
-      .pipe(catchError(() => of(MOCK_CERTIFICATES)))
-      .subscribe((certificates) => this.certificatesState.set(certificates));
-    this.api
-      .get<Announcement[]>('/announcements')
-      .pipe(catchError(() => of(MOCK_ANNOUNCEMENTS)))
-      .subscribe((announcements) => this.announcementsState.set(announcements));
-    this.api
-      .get<LearningStats>('/dashboard/stats')
-      .pipe(catchError(() => of(MOCK_STATS)))
-      .subscribe((stats) => this.statsState.set(stats));
-    this.api
-      .get<LearnerProfile>('/profile')
-      .pipe(catchError(() => of(MOCK_PROFILE)))
-      .subscribe((profile) => this.profileState.set(profile));
-    this.isLoading.set(false);
+    this.errorMessage.set('');
+    forkJoin({
+      courses: this.api.get<Course[]>('/courses'),
+      assessments: this.api.get<Assessment[]>('/assessments'),
+      certificates: this.api.get<Certificate[]>('/certificates'),
+      announcements: this.api.get<Announcement[]>('/announcements'),
+      stats: this.api.get<LearningStats>('/dashboard/stats'),
+      profile: this.api.get<LearnerProfile>('/profile'),
+    })
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+      )
+      .subscribe({
+        next: (data) => {
+          this.coursesState.set(data.courses);
+          this.assessmentsState.set(data.assessments);
+          this.certificatesState.set(data.certificates);
+          this.announcementsState.set(data.announcements);
+          this.statsState.set(data.stats);
+          this.profileState.set(data.profile);
+          this.lastLoadedAt.set(new Date());
+        },
+        error: (error: { error?: { message?: string }; message?: string }) => {
+          this.errorMessage.set(
+            error.error?.message ?? error.message ?? 'Unable to load learning data. Please try again.',
+          );
+        },
+      });
   }
 }

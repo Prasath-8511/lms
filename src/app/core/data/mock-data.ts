@@ -261,6 +261,15 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
   },
 ];
 
+export const MOCK_INSTRUCTOR_COURSES: Course[] = MOCK_COURSES.filter((course) =>
+  ['Priya Nair', 'Daniel Carter', 'Maya Thompson'].includes(course.instructor),
+);
+
+export const MOCK_ASSESSMENT_ATTEMPTS = [
+  { id: 901, assessmentId: 201, status: 'In progress' as const, startedAt: '2026-09-25T10:00:00Z' },
+  { id: 902, assessmentId: 203, status: 'Graded' as const, score: 94, startedAt: '2026-09-21T09:00:00Z', submittedAt: '2026-09-21T12:00:00Z' },
+];
+
 export const MOCK_ACTIVITY: ActivityItem[] = [
   {
     id: 501,

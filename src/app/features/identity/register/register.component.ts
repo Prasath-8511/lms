@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { UserRole } from '../../../core/auth/auth.models';
 
@@ -44,12 +45,12 @@ export class RegisterPage {
     }
 
     this.isSubmitting.set(true);
-    const registered = this.auth.register(name.trim(), email.trim(), password, role);
-    if (!registered) {
-      this.errorMessage.set('Unable to create the account. The email may already be registered.');
-      this.isSubmitting.set(false);
-      return;
-    }
-    void this.router.navigateByUrl(this.auth.homeRoute());
+    this.auth.registerAccount(name.trim(), email.trim(), password, role).pipe(finalize(() => this.isSubmitting.set(false))).subscribe((registered) => {
+      if (!registered) {
+        this.errorMessage.set('Unable to create the account. Check your details and try again.');
+        return;
+      }
+      void this.router.navigateByUrl(this.auth.homeRoute());
+    });
   }
 }

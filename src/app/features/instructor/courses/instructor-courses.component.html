@@ -1,0 +1,22 @@
+<section class="instructor-courses-page">
+  <app-feature-page
+    [config]="config()"
+    (primaryAction)="openCreate()"
+    (itemAction)="itemAction($event)"
+  />
+  <app-resource-form-dialog
+    [open]="dialogOpen()"
+    [title]="editingId() ? 'Edit course' : 'Create course'"
+    description="Complete the course details below. Required fields are marked with an asterisk."
+    [fields]="courseFields"
+    [initialValue]="formValue()"
+    [submitLabel]="editingId() ? 'Save changes' : 'Create course'"
+    [deleteLabel]="editingId() ? 'Delete course' : undefined"
+    [submitting]="submitting()"
+    [errorMessage]="errorMessage()"
+    (value)="saveCourse($event)"
+    (invalid)="errorMessage.set($event)"
+    (cancelled)="closeDialog()"
+    (deleted)="deleteCourse()"
+  />
+</section>

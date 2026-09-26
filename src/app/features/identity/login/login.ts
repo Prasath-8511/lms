@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ROLE_LABELS, UserRole } from '../../../core/auth/auth.models';
 import { IconComponent } from '../../../shared/components/icon/icon';
@@ -54,14 +55,16 @@ export class LoginPage {
     }
     this.errorMessage.set('');
     this.isSubmitting.set(true);
-    const loggedIn = this.auth.login(this.email(), this.password(), this.rememberMe());
-    if (!loggedIn) {
-      this.errorMessage.set('We could not sign you in. Check your email and password and try again.');
-      this.isSubmitting.set(false);
-      return;
-    }
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    void this.router.navigateByUrl(returnUrl || this.auth.homeRoute());
-    this.isSubmitting.set(false);
+    this.auth
+      .authenticate(this.email(), this.password(), this.rememberMe())
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe((loggedIn) => {
+        if (!loggedIn) {
+          this.errorMessage.set('We could not sign you in. Check your email and password and try again.');
+          return;
+        }
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        void this.router.navigateByUrl(returnUrl || this.auth.homeRoute());
+      });
   }
 }

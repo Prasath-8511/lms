@@ -1,18 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { finalize } from 'rxjs';
 import { AdminApiService } from '../data-access/admin-api.service';
 import { FeaturePageComponent } from '../../../shared/components/feature-page/feature-page.component';
-import { FeaturePageConfig } from '../../../shared/models/feature-page.models';
+import { FeaturePageConfig, FeaturePageItem } from '../../../shared/models/feature-page.models';
+
+interface CatalogueEntry {
+  id: number;
+  title: string;
+  owner: string;
+  status: string;
+  health: string;
+}
 
 @Component({
   selector: 'app-admin-catalogue-page',
   standalone: true,
   imports: [FeaturePageComponent],
-  template: '<app-feature-page [config]="config" />',
+  template: '<app-feature-page [config]="config()" />',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminCataloguePage {
   private readonly api = inject(AdminApiService);
-  protected readonly config: FeaturePageConfig = {
+  protected readonly config = signal<FeaturePageConfig>({
     eyebrow: 'Administration',
     title: 'Catalogue governance',
     description: 'Keep course ownership, publishing quality, and catalog metadata organized.',
@@ -20,40 +29,51 @@ export class AdminCataloguePage {
     primaryAction: 'Add course',
     secondaryAction: 'View audit log',
     secondaryRoute: '/admin/audit',
-    stats: [
-      { label: 'Published courses', value: '86', change: '+6 this month', tone: 'blue' },
-      { label: 'In review', value: '8', change: '3 due today', tone: 'orange' },
-      { label: 'Archived', value: '14', change: 'Historical', tone: 'gray' },
-      { label: 'Catalog health', value: '96%', change: 'Metadata complete', tone: 'green' },
-    ],
-    items: [
-      {
-        title: 'Advanced Angular Development',
-        subtitle: 'Owner · Maya Thompson',
-        meta: 'Published',
-        status: 'Healthy',
-        statusTone: 'green',
-        action: 'Manage course',
-      },
-      {
-        title: 'API Design Fundamentals',
-        subtitle: 'Owner · Priya Nair',
-        meta: 'In review',
-        status: 'In review',
-        statusTone: 'orange',
-        action: 'Review course',
-      },
-      {
-        title: 'Legacy Java Patterns',
-        subtitle: 'Owner · Daniel Carter',
-        meta: 'Archived',
-        status: 'Archived',
-        statusTone: 'gray',
-        action: 'View record',
-      },
-    ],
-  };
+    stats: [],
+    items: [],
+    loading: true,
+    errorMessage: '',
+    emptyMessage: 'No courses have been added to the catalogue yet.',
+  });
+
   constructor() {
-    this.api.listCatalogue().subscribe();
+    this.load();
+  }
+
+  private load(): void {
+    this.api
+      .listCatalogue()
+      .pipe(finalize(() => this.patch({ loading: false })))
+      .subscribe({
+        next: (entries) => this.apply(entries as CatalogueEntry[]),
+        error: (error: { error?: { message?: string }; message?: string }) =>
+          this.patch({ errorMessage: error.error?.message ?? error.message ?? 'Unable to load the catalogue.' }),
+      });
+  }
+
+  private apply(entries: CatalogueEntry[]): void {
+    const items: FeaturePageItem[] = entries.map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      subtitle: `Owner · ${entry.owner}`,
+      meta: entry.status,
+      status: entry.status,
+      statusTone: entry.status === 'Published' ? 'green' : entry.status === 'In review' ? 'orange' : 'gray',
+      action: entry.status === 'In review' ? 'Review course' : entry.status === 'Archived' ? 'View record' : 'Manage course',
+    }));
+    this.patch({
+      errorMessage: '',
+      items,
+      stats: [
+        { label: 'Published courses', value: String(entries.filter((entry) => entry.status === 'Published').length), change: 'Live in catalog', tone: 'blue' },
+        { label: 'In review', value: String(entries.filter((entry) => entry.status === 'In review').length), change: 'Awaiting approval', tone: 'orange' },
+        { label: 'Archived', value: String(entries.filter((entry) => entry.status === 'Archived').length), change: 'Historical', tone: 'violet' },
+        { label: 'Catalog health', value: String(entries.length), change: 'Tracked entries', tone: 'green' },
+      ],
+    });
+  }
+
+  private patch(partial: Partial<FeaturePageConfig>): void {
+    this.config.update((config) => ({ ...config, ...partial }));
   }
 }

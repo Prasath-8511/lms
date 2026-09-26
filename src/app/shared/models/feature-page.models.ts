@@ -6,12 +6,14 @@ export interface FeaturePageStat {
 }
 
 export interface FeaturePageItem {
+  id?: number;
   title: string;
   subtitle: string;
   meta: string;
   status: string;
   statusTone: 'blue' | 'green' | 'orange' | 'gray' | 'violet';
   action: string;
+  route?: string;
 }
 
 export interface FeaturePageConfig {
@@ -25,4 +27,7 @@ export interface FeaturePageConfig {
   secondaryRoute?: string;
   stats: FeaturePageStat[];
   items: FeaturePageItem[];
+  loading?: boolean;
+  errorMessage?: string;
+  emptyMessage?: string;
 }

@@ -1,0 +1,13 @@
+<section class="course-content-page">
+  <app-feature-page [config]="config()" (primaryAction)="openAddModule()" (secondaryAction)="publish()" (itemAction)="itemAction($event)" />
+  <section class="content-modules card">
+    <div class="section-heading"><div><h2>Modules and lessons</h2><p>Arrange the course structure and content.</p></div><span>{{ modules().length }} modules</span></div>
+    @for (module of modules(); track module.id; let moduleIndex = $index) {
+      <article class="module-editor">
+        <div class="module-editor-heading"><div><span>Module {{ moduleIndex + 1 }}</span><h3>{{ module.title }}</h3></div><div class="module-actions"><button class="icon-button" type="button" aria-label="Move module up" [disabled]="moduleIndex === 0 || submitting()" (click)="moveModule(module, -1)">↑</button><button class="icon-button" type="button" aria-label="Move module down" [disabled]="moduleIndex === modules().length - 1 || submitting()" (click)="moveModule(module, 1)">↓</button><button class="button button--secondary button--small" type="button" (click)="openAddLesson(module)"><app-icon name="plus" [size]="13" /> Add lesson</button></div></div>
+        <div class="lesson-editor-list">@for (lesson of module.lessons; track lesson.id; let lessonIndex = $index) {<div class="lesson-editor-row"><span class="lesson-index">{{ lessonIndex + 1 }}</span><span><strong>{{ lesson.title }}</strong><small>{{ lesson.type }} · {{ lesson.duration }}</small></span><button class="text-link" type="button" (click)="openEditLesson(module, lesson)">Edit <app-icon name="arrow-right" [size]="13" /></button><button class="icon-button" type="button" aria-label="Delete lesson" [disabled]="submitting()" (click)="deleteLesson(lesson.id)"><app-icon name="close" [size]="15" /></button></div>} @empty {<p class="empty-lessons">No lessons in this module yet.</p>}</div>
+      </article>
+    } @empty {<div class="empty-row">No modules have been added to this course.</div>}
+  </section>
+  <app-resource-form-dialog [open]="dialogOpen()" [title]="dialogMode() === 'module' ? (editingModuleId() ? 'Edit module' : 'Add module') : (editingLessonId() ? 'Edit lesson' : 'Add lesson')" [description]="'Use the fields below to save this content.'" [fields]="dialogMode() === 'module' ? moduleFields : lessonFields" [initialValue]="formValue()" [submitLabel]="editingModuleId() || editingLessonId() ? 'Save changes' : 'Add content'" [deleteLabel]="dialogMode() === 'module' && editingModuleId() ? 'Delete module' : undefined" [submitting]="submitting()" [errorMessage]="errorMessage()" (value)="save($event)" (invalid)="errorMessage.set($event)" (cancelled)="closeDialog()" (deleted)="deleteSelected()" />
+</section>

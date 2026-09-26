@@ -1,4 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthApiService, AuthResponse } from '../../features/identity/data-access/auth-api.service';
 import {
   AuthUser,
   PUBLIC_REGISTRATION_ROLES,
@@ -65,6 +68,7 @@ const MOCK_ACCOUNTS: MockAccount[] = [
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly authApi = inject(AuthApiService, { optional: true });
   private readonly storageKey = 'learnsphere_auth_user';
   private readonly registeredAccountsKey = 'learnsphere_mock_accounts';
   private readonly userState = signal<AuthUser | null>(this.readStoredUser());
@@ -72,6 +76,58 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
   readonly isAuthenticated = computed(() => this.userState() !== null);
   readonly role = computed<UserRole | null>(() => this.userState()?.role ?? null);
+
+  authenticate(email: string, password: string, remember = true): Observable<boolean> {
+    if (environment.useMocks) {
+      return of(this.login(email, password, remember));
+    }
+    if (!this.authApi) {
+      return of(false);
+    }
+
+    return this.authApi.login({ email: email.trim().toLowerCase(), password, remember }).pipe(
+      switchMap((response) => this.resolveApiUser(response)),
+      tap(({ user, response }) => {
+        this.persistUser(user, remember);
+        this.persistRuntimeCredential(response);
+      }),
+      map(({ user }) => {
+        this.userState.set(user);
+        return true;
+      }),
+      catchError(() => of(false)),
+    );
+  }
+
+  registerAccount(
+    name: string,
+    email: string,
+    password: string,
+    role: UserRole,
+    remember = true,
+  ): Observable<boolean> {
+    if (environment.useMocks) {
+      return of(this.register(name, email, password, role, remember));
+    }
+    if (!this.authApi) {
+      return of(false);
+    }
+
+    return this.authApi
+      .register({ name: name.trim(), email: email.trim().toLowerCase(), password, role, remember })
+      .pipe(
+        switchMap((response) => this.resolveApiUser(response)),
+        tap(({ user, response }) => {
+          this.persistUser(user, remember);
+          this.persistRuntimeCredential(response);
+        }),
+        map(({ user }) => {
+          this.userState.set(user);
+          return true;
+        }),
+        catchError(() => of(false)),
+      );
+  }
 
   login(email: string, password: string, remember = true): boolean {
     const normalizedEmail = email.trim().toLowerCase();
@@ -126,6 +182,10 @@ export class AuthService {
 
   logout(): void {
     this.userState.set(null);
+    this.authApi?.clearRuntimeCredentials();
+    if (!environment.useMocks && this.authApi) {
+      this.authApi.logout().subscribe({ error: () => undefined });
+    }
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem(this.storageKey);
     }
@@ -147,6 +207,51 @@ export class AuthService {
   roleLabel(): string {
     const currentRole = this.role();
     return currentRole ? ROLE_LABELS[currentRole] : 'Guest';
+  }
+
+  private resolveApiUser(
+    response: AuthResponse,
+  ): Observable<{ user: AuthUser; response: AuthResponse }> {
+    const embedded = response.user as Partial<AuthUser> | undefined;
+    if (embedded?.id && embedded.email && embedded.role) {
+      return of({ user: this.toAuthUser(embedded), response });
+    }
+    if (!this.authApi) {
+      return of({ user: this.toAuthUser(response as Partial<AuthUser>), response });
+    }
+    return this.authApi.getProfile().pipe(
+      map((profile) => ({
+        user: this.toAuthUser(profile as Partial<AuthUser>),
+        response,
+      })),
+    );
+  }
+
+  private toAuthUser(user: Partial<AuthUser>): AuthUser {
+    const role = this.normalizeRole(user.role);
+    const name = user.name?.trim() || 'Learner';
+    return {
+      id: Number(user.id ?? 0),
+      name,
+      email: user.email ?? '',
+      role,
+      roleLabel: user.roleLabel ?? ROLE_LABELS[role],
+      title: user.title ?? ROLE_LABELS[role],
+      initials: user.initials ?? this.initialsFor(name),
+    };
+  }
+
+  private normalizeRole(role: string | undefined): UserRole {
+    const normalized = (role ?? '').toLowerCase().replace(/^role_/, '');
+    return normalized in ROLE_HOME ? (normalized as UserRole) : 'learner';
+  }
+
+  private persistRuntimeCredential(response: AuthResponse): void {
+    if (response.accessToken || response.token) {
+      this.authApi?.setRuntimeBearerToken(response.accessToken ?? response.token ?? '');
+    } else if (response.apiKey) {
+      this.authApi?.setRuntimeApiKey(response.apiKey);
+    }
   }
 
   private getAccounts(): MockAccount[] {

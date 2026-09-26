@@ -32,16 +32,41 @@ export class ApiClientService {
       .pipe(map((payload) => this.unwrap(payload)));
   }
 
+  delete<T>(path: string): Observable<T> {
+    return this.http
+      .delete<T | ApiEnvelope<T>>(`${this.baseUrl}${path}`)
+      .pipe(map((payload) => this.unwrap(payload)));
+  }
+
+  patch<T>(path: string, body: unknown): Observable<T> {
+    return this.http
+      .patch<T | ApiEnvelope<T>>(`${this.baseUrl}${path}`, body)
+      .pipe(map((payload) => this.unwrap(payload)));
+  }
+
   setRuntimeApiKey(apiKey: string): void {
-    if (typeof sessionStorage !== 'undefined') {
+    this.clearRuntimeCredentials();
+    if (typeof sessionStorage !== 'undefined' && apiKey) {
       sessionStorage.setItem(environment.apiKeyStorageKey, apiKey);
     }
   }
 
-  clearRuntimeApiKey(): void {
+  setRuntimeBearerToken(token: string): void {
+    this.clearRuntimeCredentials();
+    if (typeof sessionStorage !== 'undefined' && token) {
+      sessionStorage.setItem(environment.bearerTokenStorageKey, token);
+    }
+  }
+
+  clearRuntimeCredentials(): void {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem(environment.apiKeyStorageKey);
+      sessionStorage.removeItem(environment.bearerTokenStorageKey);
     }
+  }
+
+  clearRuntimeApiKey(): void {
+    this.clearRuntimeCredentials();
   }
 
   private unwrap<T>(payload: T | ApiEnvelope<T>): T {
